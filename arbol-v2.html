@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">   <!-- review preview, not for search engines -->
+<title>El árbol de las decisiones · Balance Phone</title>
+<meta name="description" content="Antes de hablar con tu hijo: un árbol que crece con cada respuesta, y una vista general de todos los caminos.">
+<link rel="stylesheet" href="assets/bp-fonts.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600&display=swap">
+<style>
+/* ═══ tokens ═══════════════════════════════════════════════════ */
+:root{
+  --ink:#3A3A3A; --warm:#F5F3EF; --page:#EAE4D5; --card:#FFFFFF;
+  --b1:#AEA48C; --b2:#8C877B; --green-02:#6A9E74;
+  --display:"Cooper Light",Georgia,serif; --body:"Suisse Intl",system-ui,sans-serif; --mono:"Akkurat Mono","Courier New",monospace;
+  --top:64px; --band:60px; --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0}
+html,body{height:100%}
+body{background:var(--card);color:var(--ink);font-family:var(--body);font-weight:300;font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow:hidden;display:flex;flex-direction:column}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:1px solid var(--green-02);outline-offset:3px}
+.mono{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+
+/* ═══ masthead: wordmark bar and the beige band, as in the mock ═══ */
+.top{flex:0 0 var(--top);display:flex;align-items:center;justify-content:center;background:var(--warm)}
+.logo{display:block;width:181px;color:var(--ink)}   /* the wordmark alone, 181x21 (designer, 23/09) */ .logo svg{display:block;width:100%;height:auto}
+.band{flex:0 0 var(--band);display:flex;align-items:center;justify-content:center;background:var(--page);
+  font-family:'Nunito',var(--body);font-weight:600;font-size:17px;letter-spacing:0}   /* Nunito by the designer's spec, 23/09 */
+
+/* ═══ the stage: one static camera ═══════════════════════════════ */
+.stage{flex:1;position:relative;overflow:hidden;background:var(--card);min-height:0}
+
+/* landing: the turning tree, the question over it, one button */
+.hero{position:absolute;inset:0;display:grid;grid-template-rows:100%;place-items:center;transition:transform 1s var(--ease),opacity .9s ease}   /* words over the tree here, the one place that is allowed (designer, 23/09) */
+.hero .turn{height:calc(100% - 40px);width:auto;max-width:100%;display:block;justify-self:center;opacity:.8}   /* dimmed a little, Pelayo 22/09 */
+.hero-copy{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 24px;text-align:center;
+  pointer-events:none}   /* the cursor reaches the tree through the words; only the button catches it */
+.hero-copy .btn{pointer-events:auto}
+.hero-copy .lang{display:flex;gap:22px;margin-top:6px}   /* the language, chosen before anything grows */
+.hero-copy .lang button{pointer-events:auto;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--b2);text-decoration:underline;text-underline-offset:3px}
+.hero-copy .lang button[aria-selected="true"]{color:var(--ink);text-decoration:none}
+.hero-copy .lang button:hover{color:var(--green-02)}
+.hero h1{font-family:var(--display);font-weight:300;font-size:27px;line-height:1.15;letter-spacing:-.01em;max-width:720px;text-wrap:balance}
+.stage[data-phase="grow"] .hero{transform:translateY(38%);opacity:0;pointer-events:none}
+
+/* the shop-style controls as the mock draws them: warm fill, no outline */
+.btn{display:inline-flex;align-items:center;justify-content:center;min-width:118px;min-height:34px;padding:4px 18px;
+  background:var(--warm);color:var(--ink);font-weight:500;font-size:18px;letter-spacing:-.02em;transition:background-color .2s}
+.btn.alt{background:var(--warm)}
+.btn:hover,.btn:focus-visible{background:var(--page)}
+.btn.alt:hover,.btn.alt:focus-visible{background:var(--page)}
+
+
+/* ═══ version 2: a camera that follows the path, an overview of the whole tree ═══ */
+.grow{position:absolute;inset:0;opacity:0;transition:opacity .6s ease .3s;pointer-events:none}
+.stage[data-phase="grow"] .grow{opacity:1;pointer-events:auto}
+.cam{position:absolute;inset:0;overflow:hidden}
+.stage[data-view="map"] .cam{cursor:grab} .stage[data-view="map"] .cam.is-drag{cursor:grabbing}
+.world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.tree{position:absolute;left:0;top:0;color:var(--ink);overflow:visible}
+.ghost{opacity:0;transition:opacity .7s ease}
+.stage[data-view="map"] .ghost{opacity:var(--dim)}
+.panel{position:absolute;width:340px;opacity:0;transition:opacity .35s ease;pointer-events:none}
+.panel.is-on{opacity:1;pointer-events:auto}
+.stage[data-view="map"] .panel{opacity:0;pointer-events:none}
+.panel.is-moving{transition:opacity .35s ease,top .5s var(--ease),left .5s var(--ease)}
+.panel h2{font-family:var(--display);font-weight:300;font-size:26px;line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
+.panel .note{margin-top:8px;color:var(--b2);font-size:15px}
+.choices{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.links{display:flex;gap:22px;margin-top:14px}
+.links button,.views button{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  text-decoration:underline;text-underline-offset:3px}
+.links button:hover,.views button:hover{color:var(--green-02)}
+.more{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-family:var(--mono);font-weight:400;font-size:11px;
+  letter-spacing:.08em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+.more::before{content:"";width:9px;height:9px;background:var(--ink);border-radius:50%;flex:0 0 auto}
+.more:hover{color:var(--green-02)}
+.detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--ease)}
+.panel.is-open .detail{grid-template-rows:1fr}
+.detail .inner{overflow:hidden}
+.panel.is-open .inner > *{animation:rise .5s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.inner .say,.inner .why{margin-top:14px;font-size:15px;line-height:1.5}
+.inner .quote{margin-top:14px} .inner .lab{color:var(--green-02)} .inner .res{display:block;margin-top:16px} .inner .res + .grab{margin-top:8px}
+.inner .quote p,.inner .voice p{font-family:var(--display);font-weight:300;font-size:19px;line-height:1.22;margin-top:6px}
+.inner .voice{margin-top:14px}
+.inner .voice figcaption{margin-top:6px;color:var(--b2);font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+.grab{display:block;margin-top:16px;text-decoration:none}
+.grab .tile{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--page);padding:8px 12px;
+  font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.06em;text-transform:uppercase;transition:background-color .2s}
+.grab:hover .tile{background:var(--warm)}
+.grab .tile i{font-style:normal;font-size:20px;line-height:1}
+.grab p{margin-top:8px;color:var(--b2);font-size:14px;line-height:1.45}
+.inner .recall{margin-top:14px;color:var(--b2);font-size:14px;line-height:1.45}
+.panel .panel-scroll{max-height:100%;overflow:auto}
+.views{position:absolute;top:18px;right:22px;display:flex;gap:20px;z-index:4}
+.views button{color:var(--b2)} .views button[aria-selected="true"]{color:var(--ink)}
+.lbl{position:absolute;max-width:172px;font-family:var(--display);font-weight:300;font-size:14px;line-height:1.2;color:var(--ink);text-wrap:balance;
+  opacity:0;transition:opacity .45s ease;pointer-events:none;transform:translateY(-50%)}
+.lbl[data-side="left"]{text-align:right}
+.stage[data-view="map"] .lbl{opacity:.45}
+.stage[data-view="map"] .lbl.is-seen{opacity:1}
+@media (max-width:900px){
+  body{overflow:auto}
+  .stage{flex:none;min-height:calc(100dvh - var(--top) - var(--band));overflow:visible}
+  .hero{position:relative;height:calc(100dvh - var(--top) - var(--band))}
+  .hero h1{font-size:23px}
+  .stage[data-phase="grow"] .hero{display:none}
+  .grow{position:relative;inset:auto;display:none;flex-direction:column;min-height:calc(100dvh - var(--top) - var(--band))}
+  .stage[data-phase="grow"] .grow{display:flex}
+  .cam{position:relative;inset:auto;height:54dvh;flex:0 0 auto}
+  .panel{position:static;width:auto;padding:16px 20px 40px;opacity:1;pointer-events:auto}
+  .stage[data-view="map"] .panel{display:none}
+  .panel .panel-scroll{max-height:none}
+}
+</style>
+</head>
+<body>
+<header class="top"><span class="logo" role="img" aria-label="Balance Phone"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="137 0 952 113"><path fill="currentColor" d="M941.639 109.627C939.986 109.627 938.634 108.259 938.634 106.588V35.1834C938.634 33.5123 939.986 32.1449 941.639 32.1449H949.604C953.662 32.1449 953.211 36.5508 956.818 36.5508C961.026 36.5508 963.129 29.5622 977.707 29.5622C994.839 29.5622 1007.61 41.1085 1007.61 61.9222V106.588C1007.61 108.259 1006.26 109.627 1004.61 109.627H993.486C991.833 109.627 990.48 108.259 990.48 106.588V64.6569C990.48 53.1106 983.267 46.7297 973.198 46.7297C962.979 46.7297 955.766 53.1106 955.766 64.6569V106.588C955.766 108.259 954.413 109.627 952.76 109.627H941.639Z"/><path fill="currentColor" d="M695.297 109.627C693.639 109.627 692.282 108.249 692.282 106.565V5.52534C692.282 3.84134 693.639 2.46353 695.297 2.46353H738.557C757.248 2.46353 771.115 16.3947 771.115 35.531C771.115 54.5142 757.398 68.5985 738.557 68.5985H712.028C711.124 68.5985 710.521 69.2108 710.521 70.1294V106.565C710.521 108.249 709.164 109.627 707.506 109.627H695.297ZM710.521 48.8498C710.521 49.7684 711.124 50.3807 712.028 50.3807H738.406C746.093 50.3807 752.273 43.7979 752.273 35.531C752.273 27.2641 746.093 20.6813 738.406 20.6813H712.028C711.124 20.6813 710.521 21.2936 710.521 22.2122V48.8498Z"/><path fill="currentColor" d="M893.125 29.5625C905.272 29.5778 915.17 33.8239 921.923 41.547C927.785 48.6771 931.243 58.538 931.243 70.826C931.243 82.9625 927.786 92.9753 921.923 99.9538C915.214 107.778 905.399 112.019 893.359 112.088L893.359 112.089C893.261 112.09 893.162 112.09 893.063 112.09C893.062 112.09 893.061 112.09 893.06 112.09C893.037 112.09 893.014 112.09 892.992 112.09V112.09C880.845 112.074 870.947 107.828 864.194 100.105C858.332 92.9752 854.874 83.1142 854.874 70.826C854.874 58.6896 858.332 48.677 864.194 41.6986C870.904 33.8747 880.718 29.6329 892.758 29.5637V29.5631C892.856 29.5624 892.955 29.5622 893.054 29.5622H893.125V29.5625ZM893.057 46.7049C886.142 46.7049 881.031 49.1322 877.573 53.6833C874.266 57.7794 872.462 63.6959 872.462 70.826C872.462 77.9562 874.266 83.8729 877.573 87.969C881.031 92.5201 886.142 94.9474 893.057 94.9474C893.058 94.9474 893.059 94.9474 893.06 94.9474C899.975 94.9474 905.086 92.5201 908.543 87.969C911.851 83.8729 913.655 77.9562 913.655 70.826C913.655 63.6959 911.851 57.7794 908.543 53.6833C905.086 49.1322 899.975 46.7049 893.06 46.7049H893.057Z"/><path fill="currentColor" d="M1052.03 112.09C1027.39 112.09 1013.77 95.4025 1013.77 70.8262C1013.77 46.4016 1027.54 29.5622 1051.57 29.5622C1074.52 29.5622 1088.91 43.6709 1088.91 67.1852V72.6466C1088.91 75.3773 1087.23 76.7427 1084.93 76.7427H1034.12C1033.21 76.7427 1032.59 77.3495 1032.59 78.4115C1033.05 90.5479 1041.62 97.3747 1052.03 97.3747C1060.14 97.3747 1065.19 94.1889 1068.25 88.8792C1069.32 87.0587 1070.39 86.1485 1072.08 86.1485H1083.86C1085.54 86.1485 1087.23 87.5138 1086.61 89.7894C1082.79 102.684 1070.7 112.09 1052.03 112.09ZM1032.44 61.4204C1032.44 62.3307 1033.05 62.9375 1034.12 62.9375H1069.63C1070.55 62.9375 1071 62.3307 1071 61.4204C1071 51.863 1063.66 43.8226 1051.57 43.8226C1040.25 43.8226 1032.9 51.863 1032.44 61.4204Z"/><path fill="currentColor" d="M781.564 109.627C779.882 109.627 778.505 108.256 778.505 106.581V3.04518C778.505 1.37033 779.882 0 781.564 0H792.883C794.566 0 795.943 1.37033 795.943 3.04518V31.8222C795.943 33.9538 796.861 34.8674 798.543 34.8674C802.673 34.8674 803.897 29.386 818.275 29.386C835.713 29.386 848.715 41.2622 848.715 62.5785V106.581C848.715 108.256 847.339 109.627 845.656 109.627H834.337C832.654 109.627 831.277 108.256 831.277 106.581V65.3192C831.277 53.2907 823.935 46.5913 813.687 46.5913C803.285 46.5913 795.943 53.2907 795.943 65.3192V106.581C795.943 108.256 794.566 109.627 792.883 109.627H781.564Z"/><path fill="currentColor" d="M615.986 112.09C591.348 112.09 577.729 95.1534 577.729 70.2103C577.729 45.4211 591.501 28.3305 615.527 28.3305C638.481 28.3305 652.866 42.6497 652.866 66.515V72.0579C652.866 74.8294 651.183 76.2151 648.887 76.2151H598.081C597.163 76.2151 596.551 76.831 596.551 77.9088C597.01 90.2264 605.58 97.155 615.986 97.155C624.096 97.155 629.146 93.9217 632.207 88.5327C633.278 86.6851 634.349 85.7613 636.033 85.7613H647.816C649.499 85.7613 651.183 87.147 650.57 89.4565C646.745 102.544 634.655 112.09 615.986 112.09ZM596.398 60.6642C596.398 61.588 597.01 62.2039 598.081 62.2039H633.584C634.502 62.2039 634.961 61.588 634.961 60.6642C634.961 50.9641 627.616 42.8036 615.527 42.8036C604.203 42.8036 596.857 50.9641 596.398 60.6642Z"/><path fill="currentColor" d="M535.954 112.09C523.744 112.09 513.794 107.779 507.011 99.9265C501.131 92.6899 497.664 82.6819 497.664 70.2103C497.664 57.8927 501.131 47.7307 507.011 40.6481C513.794 32.6416 523.744 28.3305 535.954 28.3305C554.798 28.3305 568.667 39.5703 570.325 56.8149C570.476 58.5086 569.27 59.8943 567.612 59.8943H556.004C554.497 59.8943 553.441 59.1245 552.838 57.4308C551.18 51.118 545.904 45.7291 535.954 45.7291C529.02 45.7291 523.894 48.1926 520.427 52.8117C517.111 56.9689 515.302 62.9737 515.302 70.2103C515.302 77.4469 517.111 83.4517 520.427 87.6089C523.894 92.228 529.02 94.6915 535.954 94.6915C545.15 94.6915 551.18 89.3026 552.838 82.9898C553.441 81.2961 554.497 80.5263 556.004 80.5263H567.612C569.27 80.5263 570.476 81.912 570.325 83.6057C568.667 100.85 554.195 112.09 535.954 112.09Z"/><path fill="currentColor" d="M421.89 108.395C420.208 108.395 418.831 107.028 418.831 105.356V33.9517C418.831 32.2805 420.208 30.9132 421.89 30.9132H429.997C434.127 30.9132 433.669 35.319 437.34 35.319C441.623 35.319 443.764 28.3305 458.602 28.3305C476.039 28.3305 489.041 39.8768 489.041 60.6905V105.356C489.041 107.028 487.665 108.395 485.982 108.395H474.663C472.98 108.395 471.604 107.028 471.604 105.356V63.4251C471.604 51.8788 464.261 45.498 454.013 45.498C443.611 45.498 436.269 51.8788 436.269 63.4251V105.356C436.269 107.028 434.892 108.395 433.21 108.395H421.89Z"/><path fill="currentColor" d="M367.975 28.3305C382.812 28.3305 384.954 35.4146 389.237 35.4148C392.908 35.4148 392.449 30.9489 396.579 30.9488H404.686C406.369 30.9488 407.745 32.3347 407.745 34.0288V106.429C407.745 107.612 407.064 108.643 406.075 109.152C405.658 109.368 405.186 109.491 404.686 109.491H393.367C391.684 109.491 390.308 108.105 390.308 106.411V105.2C389.993 105.105 389.64 105.051 389.237 105.051C384.954 105.051 382.812 112.09 367.975 112.09C350.537 112.09 337.535 100.461 337.535 79.4973V61.1337C337.535 42.7425 349.272 28.3305 367.975 28.3305ZM372.564 45.7331C362.315 45.7331 354.973 52.2014 354.973 63.9057V76.7432C354.973 88.3724 362.315 94.7991 372.564 94.7991C382.884 94.7991 390.193 88.4725 390.306 77.0148L390.308 76.7432V63.9057C390.308 52.2013 382.965 45.7331 372.564 45.7331Z"/><path fill="currentColor" d="M257.116 28.3305C271.954 28.3305 274.095 35.4097 278.378 35.4097C282.049 35.4095 281.591 30.947 285.72 30.9469H293.828C295.51 30.947 296.887 32.3321 296.887 34.0247V106.396C296.887 108.089 295.51 109.474 293.828 109.474H285.72C281.591 109.474 282.049 105.011 278.378 105.011C274.095 105.011 271.954 112.09 257.116 112.09C239.679 112.09 226.677 100.394 226.677 79.3111V61.1098C226.677 42.7322 238.414 28.3305 257.116 28.3305ZM261.705 45.7205C251.457 45.7205 244.115 52.1841 244.115 63.8797V76.5412C244.115 88.2369 251.457 94.7004 261.705 94.7004C272.026 94.7003 279.334 88.3373 279.448 76.8142L279.449 76.5412V63.8797C279.449 52.1842 272.107 45.7206 261.705 45.7205Z"/><path fill="currentColor" d="M312.23 108.395C310.566 108.395 309.205 107.04 309.205 105.384V3.01096C309.205 1.35494 310.566 0 312.23 0H323.424C325.088 0 326.45 1.35494 326.45 3.01096V105.384C326.45 107.04 325.088 108.395 323.424 108.395H312.23Z"/><path fill="currentColor" d="M139.798 108.395C138.126 108.395 136.758 107.033 136.758 105.368V5.49014C136.758 3.8255 138.126 2.46353 139.798 2.46353H187.217C204.847 2.46353 217.614 15.1753 217.614 31.6703C217.614 39.3882 215.03 46.5007 208.951 51.4946C207.887 52.4026 207.887 53.7646 209.103 54.6726C215.486 59.5151 219.286 67.8383 219.286 76.4642C219.286 95.2291 206.215 108.395 187.217 108.395H139.798ZM154.844 89.3273C154.844 90.2352 155.452 90.8406 156.364 90.8406H186.153C194.512 90.8406 200.288 84.182 200.288 76.1615C200.288 68.2923 194.36 61.6338 186.153 61.6338H156.364C155.452 61.6338 154.844 62.2391 154.844 63.1471V89.3273ZM154.844 43.7768C154.844 44.6848 155.452 45.2901 156.364 45.2901H186.457C193.448 45.2901 198.92 39.5395 198.92 32.427C198.92 25.1631 193.448 19.2612 186.457 19.2612H156.364C155.452 19.2612 154.844 19.8665 154.844 20.7745V43.7768Z"/></svg></span></header>
+<div class="band">El árbol de las decisiones</div>
+<main class="stage" id="stage" data-phase="landing" data-view="walk">
+  <section class="hero" id="hero">
+    <canvas class="turn" id="turn" width="754" height="1400" aria-hidden="true"></canvas>
+    <div class="hero-copy">
+      <h1 id="heroq"></h1>
+      <button class="btn" data-start>Empezar</button>
+      <div class="lang" role="group" aria-label="Idioma / Language"><button data-lang="es" aria-selected="true">Español</button><button data-lang="en" aria-selected="false">English</button></div>
+    </div>
+  </section>
+  <section class="grow" id="grow">
+    <div class="cam" id="cam">
+      <div class="world" id="world"></div>
+      <div class="labels" id="labels"></div>
+      <div class="views"><button data-view="walk" aria-selected="true">Recorrido</button><button data-view="map" aria-selected="false">Vista general</button></div>
+    </div>
+    <div class="panel" id="panel" data-side="right"><div class="panel-scroll" id="pscroll"></div></div>
+  </section>
+</main>
+<script src="assets/arbol-v2-data.js?v=3"></script>
+<script>
+/* ═══ content ═══ the eight action stops are the design team's copy (Figma "Semaforo textos (Temporal)", 23/09/2026);
+   the questions are the printed figure; the folds on the questions keep the interview lines (role only, never a name:
+   quiz/ADVICE-PROVENANCE.md). Two languages, one shape. lbl: the short form the overview labels use. es: a resource
+   that only exists in Spanish, said so when the page is in English. ext: not ours. */
+const LINK = {
+  guide:{es:'https://drive.google.com/file/d/1-tDAstOkflKukMufDoFD220uEfSaj8hW/view', en:'https://drive.google.com/file/d/1Z3-CCs40ioGbNfsHoXrd-Ye9Zy1UsdMW/view'},
+  quiz:{es:'https://www.thebalancephone.com/es/pages/quiz', en:'https://www.thebalancephone.com/pages/quiz'},
+  pact:{es:'https://www.thebalancephone.com/es/pages/the-family-agreement', en:'https://www.thebalancephone.com/pages/the-family-agreement'},
+  villena:'https://www.elespanol.com/ciencia/salud/20240619/villena-psicologo-advierte-porno-comporta-igual-cocainaenelcerebro/863913971_0.html',
+  book:'https://www.amazon.es/%C2%BFPOR-qu%C3%A9-NO-prevenir-pornograf%C3%ADa/dp/8413442419',
+  faber:'https://www.amazon.es/hablar-ni%C3%B1os-escuchen-escuchar-hablen/dp/0060730889',
+  podcast:'https://open.spotify.com/episode/58wniEGa0E5WYoURLYzPLA',
+  duv:'https://www.daleunavuelta.org/'
+};
+const TT = {
+es:{
+  start:{q:'¿Sospechas o sabes que tu hijo ha accedido a pornografía?'},
+
+  q1:{k:'q', open:'Ver por qué', q:'¿Estás emocionalmente preparado para hablarlo con calma?',
+    why:'Si te lo tomas con calma no es porque no importe. Es porque quien tienes delante puede tener más miedo que tú.',
+    si:'q2', no:'o1'},
+  o1:{k:'exit', open:'¿Cómo?', lbl:'Tómate tu tiempo',
+    q:'Tómate tu tiempo, reflexiona sobre qué te incomoda, infórmate bien',
+    why:'Antes de hablar, date permiso para no tenerlo todo resuelto. Infórmate primero, así llegas a la conversación desde la calma.',
+    grab:[{title:'La Guía de la Conversación', what:'PDF descargable con los argumentos y los datos reales sobre qué le hace el porno al cerebro adolescente. Te da el contexto que necesitas para hablar con seguridad.', href:LINK.guide.es},
+          {ext:1, es:1, title:'Entrevista a Villena en El Español', what:'Lectura de 5 minutos, clara y sin tecnicismos, sobre los efectos de la pornografía en el cerebro adolescente. Ideal si quieres informarte rápido sin leerte un libro entero.', href:LINK.villena}]},
+
+  q2:{k:'q', open:'Ver por qué', q:'¿Tienes tu objetivo claro?', note:'Escuchar, entender, acompañar. No controlar.',
+    voice:[{t:'Tiene que haber supervisión y acompañamiento. No va de controlar.', who:'Una psicóloga especializada en tecnoadicciones'}],
+    si:'q3', no:'o2'},
+  o2:{k:'exit', open:'¿Cómo?', q:'Define tu propósito',
+    why:'Decide qué necesitas de esta conversación en concreto (abrir diálogo, reforzar el vínculo, prevenir un riesgo). Tenerlo claro evita que se te vaya de las manos.',
+    grab:[{title:'Quiz', what:'Test breve que usamos con las familias para ver en qué momento está. Te sirve para aclarar qué te preocupa realmente antes de hablar.', href:LINK.quiz.es},
+          {ext:1, es:1, title:'Entrevista a Villena en El Español', what:'Lectura de 5 minutos, clara y sin tecnicismos, sobre los efectos de la pornografía en el cerebro adolescente. Ideal si quieres informarte rápido sin leerte un libro entero.', href:LINK.villena}]},
+
+  q3:{k:'q', open:'Ver por qué', q:'¿Has elegido un buen momento y lugar para hablar?',
+    voice:[{t:'Es en la sobremesa, comiendo o cenando, cuando puede estar receptivo. Mira, me ha pasado esto. Y si en ese momento le dices: ahora no, que estoy ocupado, la próxima vez no viene. Y se lo traga.', who:'Un director de colegio de Barcelona, recordando la charla de un psiquiatra infantil a las familias del centro'}],
+    si:'a1', no:'o3'},
+  o3:{k:'exit', open:'¿Cómo?', lbl:'Busca un entorno tranquilo',
+    q:'Asegúrate de que estás en un entorno tranquilo, sin pantallas, sin interrupciones, sin prisas',
+    why:'El lugar y el momento importan tanto como lo que dices. Elige un espacio donde ninguno de los dos tenga el móvil encima de la mesa.',
+    grab:[{title:'Un pacto digital', what:'Herramienta para construir juntos un acuerdo sobre el uso del móvil en casa. Ayuda a que estas conversaciones dejen de ser una excepción incómoda.', href:LINK.pact.es}]},
+
+  a1:{k:'a', open:'¿Cómo?', lbl:'Inicia con honestidad y sin juicio',
+    q:'Inicia con honestidad y sin juicio. Ej: "He visto algo que me preocupa y quiero hablar contigo sin regañarte"',
+    why:'Empieza compartiendo lo que has visto o te preocupa, sin acusar. Parte de ti, no de lo que ha hecho mal.',
+    grab:[{title:'La Guía de la Conversación', what:'Fíjate en cómo está escrita: nunca dice "esto está mal", explica el porqué. Buen modelo de conversación sin juicio.', href:LINK.guide.es},
+          {ext:1, es:1, title:'Libro "¿Por qué no?"', what:'Incluye ejemplos reales de cómo abrir la conversación sin generar vergüenza.', href:LINK.book}],
+    next:'q4'},
+
+  q4:{k:'q', q:'¿Está dispuesto a escuchar antes de hablar?', si:'a2', no:'o4'},
+  o4:{k:'exit', open:'¿Cómo?', lbl:'Detente',
+    q:'Detente. Escuchar es más importante que dar un discurso. Trabaja tu disposición antes de seguir',
+    why:'Si notas que hablas más tú que escuchas, para. Este espacio lo abres para escuchar, no es una charla que sueltas.',
+    grab:[{ext:1, title:'Cómo hablar para que los niños escuchen', what:'De Faber y Mazlish. Referencia clásica de comunicación familiar centrada en la escucha activa.', href:LINK.faber}]},
+
+  a2:{k:'a', open:'¿Cómo?', lbl:'Haz preguntas con calma',
+    q:'Haz preguntas con calma: ¿Qué viste? ¿Cómo te sentiste? ¿Alguien te lo enseñó?',
+    why:'Las preguntas abiertas, sin acusación, son las que consiguen que siga hablando. No busques confirmar lo que ya piensas, busca entender qué ha visto.',
+    grab:[{ext:1, es:1, title:'Podcast Efecto Pantalla, con Villena', what:'Conversación en formato ligero, con ejemplos reales de cómo preguntar sin que suene a interrogatorio.', href:LINK.podcast}],
+    next:'q5'},
+
+  q5:{k:'q', open:'Ver por qué', q:'¿Está tu hijo dispuesto a seguir hablando?',
+    why:'Lo dice una fundación que trabaja con Policía y Guardia Civil: cuando se les pregunta, los propios adolescentes piden protección frente a este contenido. No lo querían ver.',
+    si:'o5', no:'o6'},
+  o5:{k:'end', open:'¿Cómo?', lbl:'Explorad juntos herramientas',
+    q:'Explorad juntos herramientas: libros, preguntas reflexivas, actividades. Si hace falta, buscad ayuda profesional',
+    why:'Esto no acaba en un día. Explorad juntos otras formas de hablar del tema, y si veis señales de que el uso no es puntual, no esperéis a que se resuelva solo.',
+    grab:[{title:'Quiz', what:'Para seguir revisando en qué momento está a medida que crece.', href:LINK.quiz.es},
+          {title:'Un pacto digital', what:'Para ajustar el acuerdo familiar a medida que crece.', href:LINK.pact.es},
+          {ext:1, es:1, title:'Libro "¿Por qué no?"', what:'Herramientas de prevención más a fondo, del propio Villena.', href:LINK.book},
+          {ext:1, es:1, title:'Asociación Dale Una Vuelta (DUV)', what:'Dirigida clínicamente por Villena. El recurso al que derivar si hace falta ayuda profesional real.', href:LINK.duv}]},
+  o6:{k:'end', open:'¿Cómo?', lbl:'Agradece que te haya escuchado',
+    q:'Agradece que te haya escuchado.',
+    quote:'Gracias por estar aquí, si algún día quieres hablar más, estoy para ti.'}
+},
+en:{
+  start:{q:'Do you suspect or know that your child has seen pornography?'},
+
+  q1:{k:'q', open:'See why', q:'Are you emotionally ready to talk about it calmly?',
+    why:'Staying calm is not because it does not matter. It is because the person in front of you may be more afraid than you are.',
+    si:'q2', no:'o1'},
+  o1:{k:'exit', open:'How?', lbl:'Take your time',
+    q:'Take your time, think about what makes you uncomfortable, get well informed',
+    why:'Before you talk, give yourself permission not to have it all worked out. Get informed first, so you come to the conversation from a place of calm.',
+    grab:[{title:'The Conversation Guide', what:'A downloadable PDF with the arguments and the real data on what pornography does to the teenage brain. It gives you the context you need to talk with confidence.', href:LINK.guide.en},
+          {ext:1, es:1, title:'Villena interview in El Español', what:'A five-minute read, clear and free of jargon, on the effects of pornography on the teenage brain. Ideal if you want to get informed quickly without reading a whole book.', href:LINK.villena}]},
+
+  q2:{k:'q', open:'See why', q:'Is your goal clear?', note:'To listen, understand and accompany. Not to control.',
+    voice:[{t:'There has to be supervision and accompaniment. It is not about control.', who:'A psychologist specialising in technology addictions'}],
+    si:'q3', no:'o2'},
+  o2:{k:'exit', open:'How?', q:'Define your purpose',
+    why:'Decide what you need from this particular conversation (to open a dialogue, strengthen the bond, prevent a risk). Being clear about it stops it getting out of hand.',
+    grab:[{title:'Quiz', what:'A short questionnaire we use with families to see where their child is at. It helps you work out what really worries you before you talk.', href:LINK.quiz.en},
+          {ext:1, es:1, title:'Villena interview in El Español', what:'A five-minute read, clear and free of jargon, on the effects of pornography on the teenage brain. Ideal if you want to get informed quickly without reading a whole book.', href:LINK.villena}]},
+
+  q3:{k:'q', open:'See why', q:'Have you chosen a good time and place to talk?',
+    voice:[{t:'It is at the table after lunch or dinner, when they may be receptive. Look, this happened to me. And if at that moment you say: not now, I am busy, next time they will not come. And they swallow it.', who:'A Barcelona school head, recalling a child psychiatrist’s talk to the school’s families'}],
+    si:'a1', no:'o3'},
+  o3:{k:'exit', open:'How?', lbl:'Find a calm setting',
+    q:'Make sure you are in a calm setting, with no screens, no interruptions and no rush',
+    why:'The place and the moment matter as much as what you say. Choose a space where neither of you has a phone on the table.',
+    grab:[{title:'The Family Agreement', what:'A tool for building an agreement together on phone use at home. It helps these conversations stop being an awkward exception.', href:LINK.pact.en}]},
+
+  a1:{k:'a', open:'How?', lbl:'Start with honesty and without judgement',
+    q:'Start with honesty and without judgement. For example: "I have seen something that worries me and I want to talk to you without telling you off"',
+    why:'Begin by sharing what you have seen or what worries you, without accusing. Start from you, not from what they did wrong.',
+    grab:[{title:'The Conversation Guide', what:'Notice how it is written: it never says "this is wrong", it explains why. A good model for a conversation without judgement.', href:LINK.guide.en},
+          {ext:1, es:1, title:'The book "¿Por qué no?"', what:'Includes real examples of how to open the conversation without causing shame.', href:LINK.book}],
+    next:'q4'},
+
+  q4:{k:'q', q:'Are you willing to listen before you speak?', si:'a2', no:'o4'},
+  o4:{k:'exit', open:'How?', lbl:'Stop',
+    q:'Stop. Listening matters more than giving a speech. Work on your readiness before you go on',
+    why:'If you notice you are talking more than listening, stop. You are opening this space to listen. It is not a talk you deliver.',
+    grab:[{ext:1, title:'How to Talk So Kids Will Listen', what:'By Faber and Mazlish. A classic on family communication built around active listening.', href:LINK.faber}]},
+
+  a2:{k:'a', open:'How?', lbl:'Ask questions calmly',
+    q:'Ask questions calmly: What did you see? How did you feel? Did someone show it to you?',
+    why:'Open questions, with no accusation, are what keep them talking. Do not try to confirm what you already think. Try to understand what they have seen.',
+    grab:[{ext:1, es:1, title:'Efecto Pantalla podcast, with Villena', what:'A conversation in a light format, with real examples of how to ask without it sounding like an interrogation.', href:LINK.podcast}],
+    next:'q5'},
+
+  q5:{k:'q', open:'See why', q:'Is your child willing to keep talking?',
+    why:'A foundation that works with the Spanish police says it: when asked, teenagers themselves ask for protection from this content. They did not want to see it.',
+    si:'o5', no:'o6'},
+  o5:{k:'end', open:'How?', lbl:'Explore tools together',
+    q:'Explore tools together: books, reflective questions, activities. If needed, seek professional help',
+    why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
+    grab:[{title:'Quiz', what:'To keep checking where your child is at as they grow.', href:LINK.quiz.en},
+          {title:'The Family Agreement', what:'To adjust the family agreement as they grow.', href:LINK.pact.en},
+          {ext:1, es:1, title:'The book "¿Por qué no?"', what:'Prevention tools in more depth, from Villena himself.', href:LINK.book},
+          {ext:1, es:1, title:'Dale Una Vuelta association (DUV)', what:'Clinically led by Villena. Where to turn if real professional help is needed.', href:LINK.duv}]},
+  o6:{k:'end', open:'How?', lbl:'Thank them for listening',
+    q:'Thank them for listening to you.',
+    quote:'Thank you for being here. If one day you want to talk more, I am here for you.'}
+}};
+const RECALL_ALL = {
+  es:'Cada conversación, por incómoda que pueda ser, es una oportunidad para educar con respeto, confianza y empatía, y nos permite conocer mejor a nuestros hijos.',
+  en:'Every conversation, however uncomfortable, is a chance to educate with respect, trust and empathy, and it lets us get to know our children better.'
+};
+const UI_ALL = {
+  es:{title:'El árbol de las decisiones · Balance Phone', band:'El árbol de las decisiones', start:'Empezar', yes:'Sí', no:'No', cont:'Continuar',
+      back:'Volver atrás', reset:'Empezar de nuevo', close:'Cerrar', eg:'Por ejemplo', res:'Recursos', ext:'Recurso externo. ', inEs:'', walk:'Recorrido', map:'Vista general'},
+  en:{title:'The decision tree · Balance Phone', band:'The decision tree', start:'Start', yes:'Yes', no:'No', cont:'Continue',
+      back:'Go back', reset:'Start again', close:'Close', eg:'For example', res:'Resources', ext:'External resource. ', inEs:'In Spanish. ', walk:'Path', map:'Overview'}
+};
+/* the language is chosen on the landing, before anything has grown; ?lang=en opens the page in English */
+let LANG = new URLSearchParams(location.search).get('lang')==='en' ? 'en' : 'es';
+let T=TT[LANG], UI=UI_ALL[LANG], RECALL=RECALL_ALL[LANG];
+function setLang(l){
+  if(!(l in TT)) return; LANG=l; T=TT[l]; UI=UI_ALL[l]; RECALL=RECALL_ALL[l];
+  document.documentElement.lang=l; document.title=UI.title; $('.band').textContent=UI.band;
+  $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start;
+  document.querySelectorAll('.lang button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.lang===l)));
+  document.querySelectorAll('.views button').forEach(b=> b.textContent=UI[b.dataset.view]);                 // V2 only
+  document.querySelectorAll('.lbl').forEach(d=>{ const n=T[d.dataset.id]; d.textContent=tidy(n.lbl||n.q); });  // V2 only
+}
+
+/* ═══ the route ═══ q1 is node 1 (the seed grows to it on Empezar); each No forks into its own branch */
+const TRUNK = ['q1','q2','q3','a1','q4','a2','q5','o5'];
+const EXIT_OF = {o1:'q1', o2:'q2', o3:'q3', o4:'q4', o6:'q5'};
+const NODE = {}; TRUNK.forEach((id,i)=> NODE[id]=i+1);
+const EX = {}; TREE.exits.forEach(e=> EX[e.id]=e);
+const nodeOf = id => id in EXIT_OF ? NODE[EXIT_OF[id]] : NODE[id];
+const sideOf = id => id in EX ? (EX[id].side>0?'right':'left') : (NODE[id]%2 ? 'right' : 'left');   // the words change side node by node (kept, Pelayo 23/09); the tree itself stays put
+const labelSide = sideOf;
+const anchorOf = id => id in EX ? EX[id].tip : TREE.nodes[NODE[id]-1].pt;
+const extOf = id => id in EX ? EX[id].ext : TREE.nodes[NODE[id]-1].loc;    // the ink's own width at that height: words sit outside it
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+/* the ink's edge over a run of rows, from the per-row profile: words never sit on a branch */
+function inkRight(y0,y1){ const p=TREE.prof, a=Math.max(0,Math.floor(Math.min(y0,y1)/p.step)), b=Math.min(p.r.length-1,Math.floor(Math.max(y0,y1)/p.step)); let m=-1; for(let i=a;i<=b;i++) if(p.r[i]>m) m=p.r[i]; return m<0 ? TREE.root[0] : m; }
+function inkLeft(y0,y1){ const p=TREE.prof, a=Math.max(0,Math.floor(Math.min(y0,y1)/p.step)), b=Math.min(p.l.length-1,Math.floor(Math.max(y0,y1)/p.step)); let m=1e9; for(let i=a;i<=b;i++) if(p.l[i]>=0 && p.l[i]<m) m=p.l[i]; return m>1e8 ? TREE.root[0] : m; }
+const tidy = s => s.replace(/ (\S+)$/, '\u00A0$1');      // never a lone word on the last line of a title
+
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const lerp = (a,b,t) => a+(b-a)*t;
+const easeIO = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+const backOut = t => { const c=1.35; return 1 + (c+1)*Math.pow(t-1,3) + c*Math.pow(t-1,2); };
+const SLOW = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const phone = () => matchMedia('(max-width:900px)').matches;
+const stage=$('#stage'), camEl=$('#cam'), world=$('#world'), panel=$('#panel'), pscroll=$('#pscroll'), labelsEl=$('#labels');
+setLang(LANG);
+document.documentElement.style.setProperty('--dim', '.6');    // the untaken tree in the overview
+
+/* ═══ the tree: a ghost of everything underneath, the grown path on top ═══ */
+const NS='http://www.w3.org/2000/svg', W=TREE.w, H=TREE.h;
+world.style.width=W+'px'; world.style.height=H+'px';
+const svg=document.createElementNS(NS,'svg'); svg.setAttribute('class','tree'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+svg.setAttribute('width',W); svg.setAttribute('height',H); world.append(svg);
+const defs=document.createElementNS(NS,'defs'); svg.append(defs);
+const ghost=document.createElementNS(NS,'g'); ghost.setAttribute('class','ghost'); svg.append(ghost);
+const live=document.createElementNS(NS,'g'); svg.append(live);
+const inkPath=(d)=>{ const p=document.createElementNS(NS,'path'); p.setAttribute('d',d); p.setAttribute('fill','currentColor'); p.setAttribute('fill-rule','evenodd'); return p; };
+const mkMask=(id)=>{ const m=document.createElementNS(NS,'mask'); m.id=id; m.setAttribute('maskUnits','userSpaceOnUse');
+  m.setAttribute('x',0); m.setAttribute('y',0); m.setAttribute('width',W); m.setAttribute('height',H); defs.append(m); return m; };
+const line=(mask,d,len)=>{ const p=document.createElementNS(NS,'path'); p.setAttribute('d',d); p.setAttribute('fill','none');
+  p.setAttribute('stroke','#fff'); p.setAttribute('stroke-width',TREE.strokeW); p.setAttribute('stroke-linecap','round');
+  p.setAttribute('stroke-linejoin','round'); p.style.strokeDasharray=`${len} ${len+400}`; p.style.strokeDashoffset=len; mask.append(p); return p; };
+const dot=(mask,x)=>{ const c=document.createElementNS(NS,'circle'); c.setAttribute('cx',x.cx); c.setAttribute('cy',x.cy); c.setAttribute('r',x.r);
+  c.setAttribute('fill','#fff'); c.setAttribute('transform',`translate(${x.cx} ${x.cy}) scale(0) translate(${-x.cx} ${-x.cy})`); mask.append(c); return c; };
+const setDot=(x,s)=>{ if(s!==x.v){ x.el.setAttribute('transform',`translate(${x.cx} ${x.cy}) scale(${s.toFixed(3)}) translate(${-x.cx} ${-x.cy})`); x.v=s; } };
+const setLine=(x,o)=>{ if(o!==x.v){ x.el.style.strokeDashoffset=o; x.v=o; } };
+
+const bands = TREE.bands.map(b=>{
+  ghost.append(inkPath(b.ink));
+  const mask=mkMask('m'+b.k);
+  const trunk={el:line(mask,b.trunk.d,b.trunk.len), len:b.trunk.len, u0:b.trunk.tu0, u1:b.trunk.tu1, v:-1};
+  const branches=b.branches.map(x=>({el:line(mask,x.d,x.len), len:x.len, u0:x.u0, u1:x.u1, v:-1}));
+  const blossoms=b.blossoms.map(x=>({el:dot(mask,x), cx:x.cx, cy:x.cy, u0:x.u0, u1:x.u1, v:-1}));
+  const p=inkPath(b.ink); p.setAttribute('mask',`url(#m${b.k})`); live.append(p);
+  const lo=Math.min(trunk.u0, ...branches.map(x=>x.u0), ...blossoms.map(x=>x.u0)), hi=Math.max(trunk.u1, ...branches.map(x=>x.u1), ...blossoms.map(x=>x.u1));
+  return {k:b.k, trunk, branches, blossoms, prev:-1, lo, hi};
+});
+const exits = TREE.exits.map(e=>{
+  ghost.append(inkPath(e.ink));
+  const mask=mkMask('x'+e.id);
+  const branches=e.branches.map(x=>({el:line(mask,x.d,x.len), len:x.len, e0:x.e0, e1:x.e1, v:-1}));
+  const blossoms=e.blossoms.map(x=>({el:dot(mask,x), cx:x.cx, cy:x.cy, e0:x.e0, e1:x.e1, v:-1}));
+  const p=inkPath(e.ink); p.setAttribute('mask',`url(#x${e.id})`); live.append(p);
+  return {id:e.id, branches, blossoms, v:0};
+});
+const seedEl=document.createElementNS(NS,'circle'); seedEl.setAttribute('cx',TREE.root[0]); seedEl.setAttribute('cy',TREE.root[1]);
+seedEl.setAttribute('r',9); seedEl.setAttribute('fill','currentColor'); live.append(seedEl);
+
+let u=0; const E={}; exits.forEach(x=> E[x.id]=0);
+function render(uu){
+  u=uu;
+  for(const b of bands){
+    if((u<=b.lo && b.prev<=b.lo) || (u>=b.hi && b.prev>=b.hi)){ b.prev=u; continue; }
+    b.prev=u;
+    setLine(b.trunk, b.trunk.len*(1-clamp((u-b.trunk.u0)/(b.trunk.u1-b.trunk.u0),0,1)));
+    for(const x of b.branches) setLine(x, x.len*(1-clamp((u-x.u0)/(x.u1-x.u0),0,1)));
+    for(const x of b.blossoms){ const p=clamp((u-x.u0)/(x.u1-x.u0),0,1); setDot(x, p<=0?0:p>=1?1:backOut(p)); }
+  }
+  seedEl.setAttribute('transform',`translate(${TREE.root[0]} ${TREE.root[1]}) scale(${(1-clamp(u/.12,0,1)).toFixed(3)}) translate(${-TREE.root[0]} ${-TREE.root[1]})`);
+}
+function renderExit(id, e){
+  const x=exits.find(q=>q.id===id); if(!x) return; E[id]=e; x.v=e;
+  for(const s of x.branches) setLine(s, s.len*(1-clamp((e-s.e0)/(s.e1-s.e0),0,1)));
+  for(const s of x.blossoms){ const p=clamp((e-s.e0)/(s.e1-s.e0),0,1); setDot(s, p<=0?0:p>=1?1:backOut(p)); }
+}
+function tween(dur, step, done){
+  if(SLOW){ step(1); done&&done(); return; }
+  const t0=performance.now();
+  (function loop(now){ const t=Math.min(1,(now-t0)/dur); step(easeIO(t)); t<1 ? requestAnimationFrame(loop) : done&&done(); })(t0);
+}
+
+/* ═══ the camera ═══ one transform on .world; a damped chase in Recorrido, the user's own hand in Vista general */
+const C={x:TREE.root[0], y:TREE.root[1], s:.6}, TG={x:C.x, y:C.y, s:C.s};
+let view='walk', settled=false, userHeld=false;
+const camW=()=>camEl.clientWidth, camH=()=>camEl.clientHeight;
+const S_FOLLOW=()=> clamp(Math.min(camH()/1150, (camW()-(MINW+GAP+2*MRG))/W), .3, 1.1);   // about three nodes of height in view, and never wider than the window leaves room for the words
+const S_FIT=()=> Math.min((camW()-60)/W, (camH()-60)/H);
+const toScreen=(p)=>({x:(p[0]-C.x)*C.s + camW()/2, y:(p[1]-C.y)*C.s + camH()/2});
+const TRUNK_X = TREE.nodes.reduce((a,n)=>a+n.pt[0],0)/TREE.nodes.length;   // the tree keeps one place on screen: only the height follows
+function aim(point, side){
+  const s=S_FOLLOW(), dx = phone()?0:0.10*camW()/s, dy = phone()?0:0.05*camH()/s;
+  TG.x=TRUNK_X+dx; TG.y=point[1]+dy; TG.s=s; settled=false; userHeld=false;
+}
+function applyCam(){ world.style.transform=`translate(${(camW()/2-C.x*C.s).toFixed(2)}px,${(camH()/2-C.y*C.s).toFixed(2)}px) scale(${C.s.toFixed(5)})`; }
+function clampMap(){
+  const hw=camW()/2/C.s, hh=camH()/2/C.s, m=80;
+  C.x = (W+2*m) <= hw*2 ? W/2 : clamp(C.x, -m+hw, W+m-hw);
+  C.y = (H+2*m) <= hh*2 ? H/2 : clamp(C.y, -m+hh, H+m-hh);
+}
+function tick(){
+  if(!userHeld && !settled){
+    const k=SLOW?1:.11;
+    C.x=lerp(C.x,TG.x,k); C.y=lerp(C.y,TG.y,k); C.s=lerp(C.s,TG.s,k);
+    if(Math.abs(C.x-TG.x)<.2 && Math.abs(C.y-TG.y)<.2 && Math.abs(C.s-TG.s)<.0005){ C.x=TG.x; C.y=TG.y; C.s=TG.s; settled=true; }
+    if(view==='map') clampMap();
+    applyCam();
+  }
+  if(stage.dataset.phase==='grow'){ if(view==='walk' && panel.classList.contains('is-on')) placePanel(); if(view==='map') placeLabels(); }
+  requestAnimationFrame(tick);
+}
+
+/* ═══ the words beside the current stop ═══ */
+let here='q1', path=[], busy=false;
+function html(id){
+  const n=T[id], isQ=n.k==='q', isEnd=n.k==='exit'||n.k==='end';
+  const voices=(n.voice||[]).map(v=>`<figure class="voice"><blockquote><p>${esc(v.t)}</p></blockquote><figcaption>${esc(v.who)}</figcaption></figure>`).join('');
+  const grabs=(n.grab||[]).map(g=>`<a class="grab" href="${g.href}" target="_blank" rel="noopener"><span class="tile"><span>${esc(g.title)}</span><i>&darr;</i></span><p>${g.ext?UI.ext:''}${g.es?UI.inEs:''}${esc(g.what)}</p></a>`).join('');
+  const hidden=[ n.say?`<p class="say">${esc(n.say)}</p>`:'', n.quote?`<div class="quote"><span class="mono lab">${UI.eg}</span><p>${esc(n.quote)}</p></div>`:'',
+    n.why?`<p class="why">${esc(n.why)}</p>`:'', voices, grabs?`<span class="mono lab res">${UI.res}</span>`+grabs:'', isEnd?`<p class="recall">${esc(RECALL)}</p>`:'' ].filter(Boolean).join('');
+  const choices = isQ ? `<div class="choices"><button class="btn" data-pick="si">${UI.yes}</button><button class="btn alt" data-pick="no">${UI.no}</button></div>`
+                : n.next ? `<div class="choices"><button class="btn" data-pick="si">${UI.cont}</button></div>` : '';
+  return `<h2>${esc(tidy(n.q))}</h2>${n.note?`<p class="note">${esc(n.note)}</p>`:''}${choices}`
+       + (hidden?`<button class="more" data-open>${n.open}</button><div class="detail"><div class="inner">${hidden}</div></div>`:'')
+       + `<div class="links">${path.length?`<button data-back>${UI.back}</button>`:''}${(path.length||here!=='q1')?`<button data-reset>${UI.reset}</button>`:''}</div>`;
+}
+function panelHeight(open){
+  const was=pscroll.style.maxHeight; pscroll.style.maxHeight='none';
+  const d=panel.querySelector('.detail'), full=panel.offsetHeight;
+  const h = d ? full - d.offsetHeight + (open ? d.firstElementChild.scrollHeight : 0) : full;
+  pscroll.style.maxHeight=was; return h;
+}
+/* where the words go: on their own side when the ink leaves room for them there, on the other side when it does not,
+   higher or lower than the stop when a branch runs where they would sit, narrower when nothing wider fits. Every
+   candidate width is measured for real (a narrower block is taller and covers more rows), the rows are padded so a
+   half pixel never changes the answer, and the words never sit on ink: the alternating side is a preference,
+   readability is the rule (Pelayo, 23/09). */
+const PW=340, MINW=200, GAP=30, MRG=16, PAD=8, WIDTHS=[PW,300,260,220,MINW], TOPM=48;   // TOPM: under the Recorrido / Vista general control
+function solve(roomOn, heightAt, pref, yNode, room, sh, topMin){
+  const other = pref==='right'?'left':'right'; let best=null, fall=null;
+  for(const width of WIDTHS){
+    const h=heightAt(width), fits=h<=sh-topMin-room, span=fits?h:sh-topMin-room;
+    const t0 = fits ? clamp(yNode-14, topMin, sh-h-room) : topMin, tops=[t0];              // nearest to the stop first
+    if(fits) for(let d=36; d<sh; d+=36){ if(t0-d>=topMin) tops.push(t0-d); if(t0+d<=sh-h-room) tops.push(t0+d); }
+    for(const side of [pref,other]) for(const top of tops){
+      const r=roomOn(side,top,span).room, far=Math.abs(top-t0), away=side===pref?0:60;
+      if(r>=width){ const score=width-.35*far-away; if(!best||score>best.score) best={side, dy:top-yNode, width, score}; }
+      else { const score=r-.12*far-away*.7; if(!fall||score>fall.score) fall={side, dy:top-yNode, width:clamp(r,MINW,width), score}; }
+    }
+  }
+  return best||fall;                              // a wide block a little away beats a narrow one at the stop; nothing fitting: the roomiest compromise
+}
+/* V2 decides once per stop against the camera's target, where the view will settle, and only the position follows the
+   live camera: the block never flips sides while the view is still easing. Once settled, one check against the live
+   camera; if the words touch ink after all, one re-decision from where the camera really is. */
+let fit=null;
+const camY=(cam,p)=>(p[1]-cam.y)*cam.s+camH()/2;
+function roomOn(cam, side, top, span){                     // free width beside the ink over the rows a block at `top` would cover
+  const sh=camH(), sw=camW(), wy0=cam.y+(top-PAD-sh/2)/cam.s, wy1=cam.y+(top+span+PAD-sh/2)/cam.s;
+  if(side==='right'){ const x0=(inkRight(wy0,wy1)-cam.x)*cam.s+sw/2+GAP; return {room:sw-MRG-x0, x0}; }
+  const x1=(inkLeft(wy0,wy1)-cam.x)*cam.s+sw/2-GAP; return {room:x1-MRG, x1};
+}
+function decide(cam, pref, isOpen, room){
+  const a=anchorOf(here), hs={}, heightAt=w=>{ if(!(w in hs)){ panel.style.width=w+'px'; hs[w]=panelHeight(isOpen); } return hs[w]; };
+  fit=solve((sd,top,span)=>roomOn(cam,sd,top,span), heightAt, pref, camY(cam,a), room, camH(), TOPM); panel.style.width=fit.width+'px';
+  fit.h=heightAt(fit.width);                     // measured once here, never per frame: measuring toggles max-height, which resets the scroll and thrashes layout
+}
+function placePanel(open, pref){
+  if(phone()){ panel.style.left=panel.style.top=panel.style.width=''; pscroll.style.maxHeight='none'; return; }
+  const isOpen = open===undefined ? panel.classList.contains('is-open') : open, sh=camH(), sw=camW(), a=anchorOf(here);
+  const room = isOpen ? Math.max(84, Math.round(sh*.14)) : 16;
+  if(pref||!fit) decide(TG, pref||sideOf(here), isOpen, room);
+  let h=fit.h, fits=h<=sh-TOPM-room, span=fits?h:sh-TOPM-room, top=fits?clamp(camY(C,a)+fit.dy,TOPM,sh-h-room):TOPM, rr=roomOn(C,fit.side,top,span);
+  if(settled && !fit.checked){ fit.checked=true; if(rr.room<fit.width-1){ decide(C, fit.side, isOpen, room); fit.checked=true;
+    h=fit.h; fits=h<=sh-TOPM-room; span=fits?h:sh-TOPM-room; top=fits?clamp(camY(C,a)+fit.dy,TOPM,sh-h-room):TOPM; rr=roomOn(C,fit.side,top,span); } }
+  panel.dataset.side=fit.side;
+  panel.style.left=clamp(fit.side==='right' ? rr.x0 : rr.x1-fit.width, MRG, sw-fit.width-MRG)+'px';
+  panel.style.top=top+'px';
+  const mh = fits ? 'none' : (sh-TOPM-room)+'px'; if(pscroll.style.maxHeight!==mh) pscroll.style.maxHeight=mh;   // only when it changes: a tall block keeps its scroll position
+}
+function show(id){
+  here=id; pscroll.innerHTML=html(id); panel.classList.remove('is-open','is-moving');
+  placePanel(false, sideOf(here)); requestAnimationFrame(()=>{ placePanel(false); panel.classList.add('is-on'); }); paintLabels();
+}
+function hide(){ panel.classList.remove('is-on'); }
+function toggle(){
+  const b=panel.querySelector('.more'); if(!b) return;
+  const open=!panel.classList.contains('is-open');
+  panel.classList.add('is-moving'); placePanel(open, fit?fit.side:sideOf(here)); panel.classList.toggle('is-open', open); b.textContent = open ? UI.close : T[here].open;
+  setTimeout(()=> panel.classList.remove('is-moving'), 600);
+}
+
+/* ═══ the overview labels ═══ */
+const LBL={};
+[...TRUNK, ...Object.keys(EXIT_OF)].forEach(id=>{ const d=document.createElement('div'); d.className='lbl'; d.dataset.id=id; d.dataset.side=labelSide(id); d.textContent=tidy(T[id].lbl||T[id].q); labelsEl.append(d); LBL[id]=d; });
+function seen(id){ return id===here || path.includes(id) || (id in EX && E[id]>=1) || (!(id in EX) && u>=NODE[id]); }
+function paintLabels(){ for(const id in LBL) LBL[id].classList.toggle('is-seen', seen(id)); }
+function placeLabels(){                       // outside the ink, and pushed apart when two would overlap on one side
+  const items=[];
+  for(const id in LBL){ const d=LBL[id], side=d.dataset.side, y=toScreen(anchorOf(id)).y, hh=d.offsetHeight||18;
+    const wy0=C.y+(y-hh/2-camH()/2)/C.s, wy1=C.y+(y+hh/2-camH()/2)/C.s;                  // the rows the label covers
+    const x = side==='right' ? (inkRight(wy0,wy1)-C.x)*C.s+camW()/2+14 : (inkLeft(wy0,wy1)-C.x)*C.s+camW()/2-14-d.offsetWidth;
+    items.push({d, side, y, x, h:hh}); }
+  for(const side of ['left','right']){
+    const arr=items.filter(i=>i.side===side).sort((a,b)=>a.y-b.y);
+    for(let pass=0; pass<4; pass++) for(let i=1;i<arr.length;i++){
+      const gap=(arr[i-1].h+arr[i].h)/2+8, dd=arr[i].y-arr[i-1].y; if(dd<gap){ const push=(gap-dd)/2; arr[i-1].y-=push; arr[i].y+=push; } }
+  }
+  for(const i of items){ i.d.style.top=i.y+'px'; i.d.style.left=i.x+'px'; }
+}
+
+/* ═══ moves ═══ */
+function anchorAt(uu){ const k=Math.min(Math.max(Math.round(uu),0),TRUNK.length); return k===0 ? TREE.root : TREE.nodes[k-1].pt; }
+function growTo(n, done){
+  const from=u, a=anchorAt(from), b=TREE.nodes[n-1].pt, side=sideOf(TRUNK[n-1]);
+  const dur=SLOW?0:Math.min(3000, Math.max(700, 1600*Math.abs(n-from)));
+  busy=true; tween(dur, e=>{ render(from+(n-from)*e); aim([lerp(a[0],b[0],e), lerp(a[1],b[1],e)], side); }, ()=>{ busy=false; done&&done(); });
+}
+function growExit(id, to, done){
+  const x=EX[id], from=E[id], dur=SLOW?0:1400;
+  busy=true; tween(dur, e=>{ const v=from+(to-from)*e; renderExit(id, v); aim([lerp(x.attach[0],x.tip[0],v), lerp(x.attach[1],x.tip[1],v)], sideOf(id)); }, ()=>{ busy=false; done&&done(); });
+}
+function go(to){
+  if(busy) return; path.push(here); hide();
+  setTimeout(()=>{ if(to in EX) growExit(to, 1, ()=> show(to)); else growTo(NODE[to], ()=> show(to)); }, 220);
+}
+function pick(a){ if(busy||stage.dataset.phase!=='grow'||view!=='walk') return; const n=T[here];
+  if(n.k==='q') go(n[a]); else if(n.next && a==='si') go(n.next); }
+function back(){
+  if(busy||!path.length) return; const from=here, to=path.pop(); hide();
+  setTimeout(()=>{ if(from in EX) growExit(from, 0, ()=> show(to)); else growTo(NODE[to], ()=> show(to)); }, 220);
+}
+function reset(){
+  if(busy) return; path=[]; hide();
+  const undo=()=>{ const open=Object.keys(E).filter(id=>E[id]>0); if(open.length){ growExit(open[0], 0, undo); return; } growTo(1, ()=> show('q1')); };
+  setTimeout(undo, 220);
+}
+function start(){
+  if(stage.dataset.phase==='grow') return; stage.dataset.phase='grow';
+  C.s=S_FOLLOW(); C.x=TREE.root[0]; C.y=TREE.root[1]+0.05*camH()/C.s; TG.x=C.x; TG.y=C.y; TG.s=C.s; applyCam(); render(0);
+  setTimeout(()=> growTo(1, ()=> show('q1')), 900);
+}
+function setView(v){
+  if(v===view||busy) return; view=v; stage.dataset.view=v;
+  document.querySelectorAll('.views button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.view===v)));
+  if(v==='map'){ TG.x=W/2; TG.y=H/2; TG.s=S_FIT(); settled=false; userHeld=false; paintLabels(); placeLabels(); }
+  else { fit=null; aim(anchorOf(here), sideOf(here)); }
+}
+
+/* ═══ input ═══ */
+let drag=null, dragged=false, pinch=null;
+document.addEventListener('click', e=>{
+  if(dragged){ dragged=false; e.preventDefault(); return; }
+  if(e.target.closest('a[href]')) return;
+  const b=e.target.closest('button'); if(!b) return;
+  if('start' in b.dataset) return start();
+  if(b.dataset.lang) return setLang(b.dataset.lang);
+  if(b.dataset.pick!==undefined) return pick(b.dataset.pick);
+  if('open' in b.dataset) return toggle();
+  if('back' in b.dataset) return back();
+  if('reset' in b.dataset) return reset();
+  if(b.dataset.view) return setView(b.dataset.view);
+});
+document.addEventListener('keydown', e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return; const k=e.key.toLowerCase();
+  if(stage.dataset.phase!=='grow'){ if(k==='enter'||k===' '){ e.preventDefault(); start(); } return; }
+  if(k==='m'){ setView(view==='map'?'walk':'map'); return; }
+  if(view!=='walk') return;
+  if(k==='s'||k==='y'||k==='arrowright'){ e.preventDefault(); pick('si'); }
+  else if(k==='n'||k==='arrowleft'){ e.preventDefault(); pick('no'); }
+  else if(k==='backspace'){ e.preventDefault(); back(); }
+  else if(k==='arrowdown'||k===' '){ e.preventDefault(); toggle(); }
+});
+function zoomAt(next, px, py){
+  const r=camEl.getBoundingClientRect(), ox=(px-r.left)-camW()/2, oy=(py-r.top)-camH()/2;
+  const wx=C.x+ox/C.s, wy=C.y+oy/C.s; C.s=clamp(next, S_FIT()*.85, 1.4);
+  C.x=wx-ox/C.s; C.y=wy-oy/C.s; clampMap(); applyCam(); userHeld=true;
+}
+camEl.addEventListener('wheel', e=>{
+  if(view!=='map'||busy) return; e.preventDefault();
+  if(e.ctrlKey||e.metaKey) zoomAt(C.s*Math.exp(-e.deltaY*0.01), e.clientX, e.clientY);
+  else zoomAt(C.s*Math.exp(-e.deltaY*0.0022), e.clientX, e.clientY);
+},{passive:false});
+camEl.addEventListener('dblclick', e=>{ if(view!=='map') return; zoomAt(C.s*1.6, e.clientX, e.clientY); });
+const pts=new Map();
+camEl.addEventListener('pointerdown', e=>{
+  if(view!=='map'||busy) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1){ drag={x:e.clientX,y:e.clientY,cx:C.x,cy:C.y}; dragged=false; camEl.classList.add('is-drag'); }
+  else if(pts.size===2){ const [a,b]=[...pts.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y), s:C.s, mx:(a.x+b.x)/2, my:(a.y+b.y)/2}; drag=null; }
+});
+camEl.addEventListener('pointermove', e=>{
+  if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch && pts.size===2){ const [a,b]=[...pts.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); zoomAt(pinch.s*d/pinch.d, pinch.mx, pinch.my); dragged=true; return; }
+  if(!drag) return;
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>6) dragged=true;
+  C.x=drag.cx-dx/C.s; C.y=drag.cy-dy/C.s; clampMap(); applyCam(); userHeld=true;
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev=> camEl.addEventListener(ev, e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null; if(pts.size===0){ drag=null; camEl.classList.remove('is-drag'); } }));
+camEl.style.touchAction='none';
+addEventListener('resize', ()=>{ if(stage.dataset.phase!=='grow') return; if(view==='map'){ TG.s=S_FIT(); TG.x=W/2; TG.y=H/2; settled=false; userHeld=false; } else { fit=null; aim(anchorOf(here), sideOf(here)); } });
+
+/* the turning tree: 180 single frames on a canvas at 12 fps, so it can rest on the frame under the cursor and go on from it */
+const turnEl=$('#turn'), TCTX=turnEl.getContext('2d'), NF=180, FPS=12, FR=[]; let tPaused=false, tClock=0, tLast=0, tFrame=-1;
+for(let i=1;i<=NF;i++){ const im=new Image(); im.src=`assets/turn/f_${String(i).padStart(3,'0')}.gif?v=11`; FR.push(im); }
+function turnTick(now){
+  if(stage.dataset.phase!=='landing'){ tLast=0; requestAnimationFrame(turnTick); return; }
+  if(tLast && !tPaused) tClock += (now-tLast)/1000; tLast=now;
+  const f=Math.floor(tClock*FPS)%NF, im=FR[f];
+  if(f!==tFrame && im.complete && im.naturalWidth){
+    if(turnEl.width!==im.naturalWidth){ turnEl.width=im.naturalWidth; turnEl.height=im.naturalHeight; }
+    TCTX.clearRect(0,0,turnEl.width,turnEl.height); TCTX.drawImage(im,0,0); tFrame=f; }
+  requestAnimationFrame(turnTick);
+}
+requestAnimationFrame(turnTick);
+turnEl.addEventListener('pointerenter', ()=>{ tPaused=true; });   // holds the current frame
+turnEl.addEventListener('pointerleave', ()=>{ tPaused=false; });  // and continues from it
+
+/* ═══ go ═══ */
+render(0); applyCam(); requestAnimationFrame(tick);
+</script>
+</body>
+</html>
