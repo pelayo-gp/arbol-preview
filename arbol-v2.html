@@ -163,7 +163,15 @@ const LINK = {
   book:'https://www.amazon.es/%C2%BFPOR-qu%C3%A9-NO-prevenir-pornograf%C3%ADa/dp/8413442419',
   faber:'https://www.amazon.es/hablar-ni%C3%B1os-escuchen-escuchar-hablen/dp/0060730889',
   podcast:'https://open.spotify.com/episode/58wniEGa0E5WYoURLYzPLA',
-  duv:'https://www.daleunavuelta.org/'
+  duv:'https://www.daleunavuelta.org/',
+  /* English-language equivalents, verified live 25/09/2026 */
+  nspcc:'https://www.nspcc.org.uk/keeping-children-safe/online-safety/inappropriate-explicit-content/online-porn/',
+  nspccHelp:'https://www.nspcc.org.uk/keeping-children-safe/our-services/nspcc-helpline/',
+  ccInfo:'https://www.childrenscommissioner.gov.uk/resource/information-sheet-pornography-and-young-people/',
+  csm:'https://www.commonsensemedia.org/articles/talking-with-teens-and-preteens-about-pornography',
+  faberTeens:'https://www.amazon.co.uk/How-Talk-Teens-will-Listen/dp/1785120182',
+  askLisa:'https://drlisadamour.com/resource/my-kid-looked-at-porn-what-should-i-do-2/',
+  crTeens:'https://parents.culturereframed.org/course/parents-of-teens/'
 };
 const TT = {
 es:{
@@ -237,7 +245,7 @@ en:{
     q:'Take your time, think about what makes you uncomfortable, get well informed',
     why:'Before you talk, give yourself permission not to have it all worked out. Get informed first, so you come to the conversation from a place of calm.',
     grab:[{title:'The Conversation Guide', what:'A downloadable PDF with the arguments and the real data on what pornography does to the teenage brain. It gives you the context you need to talk with confidence.', href:LINK.guide.en},
-          {ext:1, es:1, title:'Villena interview in El Español', what:'A five-minute read, clear and free of jargon, on the effects of pornography on the teenage brain. Ideal if you want to get informed quickly without reading a whole book.', href:LINK.villena}]},
+          {ext:1, title:'NSPCC: talking about online porn', what:'A five-minute read from the UK children\'s charity, clear and free of jargon, on the risks of online pornography and how to raise it with your child. Ideal if you want to get informed quickly without reading a whole book.', href:LINK.nspcc}]},
 
   q2:{k:'q', open:'See why', q:'Is your goal clear?', note:'To listen, understand and accompany. Not to control.',
     voice:[{t:'There has to be supervision and accompaniment. It is not about control.', who:'A psychologist specialising in technology addictions'}],
@@ -245,7 +253,7 @@ en:{
   o2:{k:'exit', open:'How?', q:'Define your purpose',
     why:'Decide what you need from this particular conversation (to open a dialogue, strengthen the bond, prevent a risk). Being clear about it stops it getting out of hand.',
     grab:[{title:'Quiz', what:'A short questionnaire we use with families to see where their child is at. It helps you work out what really worries you before you talk.', href:LINK.quiz.en},
-          {ext:1, es:1, title:'Villena interview in El Español', what:'A five-minute read, clear and free of jargon, on the effects of pornography on the teenage brain. Ideal if you want to get informed quickly without reading a whole book.', href:LINK.villena}]},
+          {ext:1, title:'Children\'s Commissioner: pornography and young people', what:'A short information sheet with the real numbers for England, from a survey of over a thousand 16 to 21 year olds: when they first saw it, how, and what they make of it. Useful for working out what really worries you before you talk.', href:LINK.ccInfo}]},
 
   q3:{k:'q', open:'See why', q:'Have you chosen a good time and place to talk?',
     voice:[{t:'It is at the table after lunch or dinner, when they may be receptive. Look, this happened to me. And if at that moment you say: not now, I am busy, next time they will not come. And they swallow it.', who:'A Barcelona school head, recalling a child psychiatrist’s talk to the school’s families'}],
@@ -259,19 +267,19 @@ en:{
     q:'Start with honesty and without judgement. For example: "I have seen something that worries me and I want to talk to you without telling you off"',
     why:'Begin by sharing what you have seen or what worries you, without accusing. Start from you, not from what they did wrong.',
     grab:[{title:'The Conversation Guide', what:'Notice how it is written: it never says "this is wrong", it explains why. A good model for a conversation without judgement.', href:LINK.guide.en},
-          {ext:1, es:1, title:'The book "¿Por qué no?"', what:'Includes real examples of how to open the conversation without causing shame.', href:LINK.book}],
+          {ext:1, title:'Common Sense Media: talking with teens about pornography', what:'Concrete lines for opening the conversation: decide what you want from it, state your concern, ask a question. A good model for a conversation without judgement.', href:LINK.csm}],
     next:'q4'},
 
   q4:{k:'q', q:'Are you willing to listen before you speak?', si:'a2', no:'o4'},
   o4:{k:'exit', open:'How?', lbl:'Stop',
     q:'Stop. Listening matters more than giving a speech. Work on your readiness before you go on',
     why:'If you notice you are talking more than listening, stop. You are opening this space to listen. It is not a talk you deliver.',
-    grab:[{ext:1, title:'How to Talk So Kids Will Listen', what:'By Faber and Mazlish. A classic on family communication built around active listening.', href:LINK.faber}]},
+    grab:[{ext:1, title:'How to Talk So Teens Will Listen', what:'By Faber and Mazlish, the teenage edition. A classic on family communication built around active listening.', href:LINK.faberTeens}]},
 
   a2:{k:'a', open:'How?', lbl:'Ask questions calmly',
     q:'Ask questions calmly: What did you see? How did you feel? Did someone show it to you?',
     why:'Open questions, with no accusation, are what keep them talking. Do not try to confirm what you already think. Try to understand what they have seen.',
-    grab:[{ext:1, es:1, title:'Efecto Pantalla podcast, with Villena', what:'A conversation in a light format, with real examples of how to ask without it sounding like an interrogation.', href:LINK.podcast}],
+    grab:[{ext:1, title:'Ask Lisa podcast: my kid looked at porn', what:'Psychologist Lisa Damour on how to raise it and what to say once the conversation gets going. Real examples of how to ask without it sounding like an interrogation.', href:LINK.askLisa}],
     next:'q5'},
 
   q5:{k:'q', open:'See why', q:'Is your child willing to keep talking?',
@@ -282,8 +290,8 @@ en:{
     why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
     grab:[{title:'Quiz', what:'To keep checking where your child is at as they grow.', href:LINK.quiz.en},
           {title:'The Family Agreement', what:'To adjust the family agreement as they grow.', href:LINK.pact.en},
-          {ext:1, es:1, title:'The book "¿Por qué no?"', what:'Prevention tools in more depth, from Villena himself.', href:LINK.book},
-          {ext:1, es:1, title:'Dale Una Vuelta association (DUV)', what:'Clinically led by Villena. Where to turn if real professional help is needed.', href:LINK.duv}]},
+          {ext:1, title:'Culture Reframed Parents Program', what:'A free, self-paced course for parents of teens: twelve modules with scripted conversations. Prevention tools in more depth.', href:LINK.crTeens},
+          {ext:1, title:'NSPCC Helpline', what:'The UK children\'s charity\'s free line for any adult worried about a child. Where to turn if real professional help is needed.', href:LINK.nspccHelp}]},
   o6:{k:'end', open:'How?', lbl:'Thank them for listening',
     q:'Thank them for listening to you.',
     quote:'Thank you for being here. If one day you want to talk more, I am here for you.'}
