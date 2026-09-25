@@ -49,6 +49,7 @@ a{color:inherit}
 .credit{position:absolute;left:24px;bottom:24px;display:flex;align-items:flex-end;gap:10px;max-width:520px;pointer-events:none}
 .credit img{display:block;width:88px;height:auto;border:1px solid var(--page)}
 .credit figcaption{font-family:var(--mono);font-weight:400;font-size:10px;line-height:1.5;letter-spacing:.02em;color:var(--b2);text-decoration:underline;text-underline-offset:3px;padding-bottom:2px}
+@media (min-width:1360px){.credit{max-width:none} .credit figcaption{white-space:pre-line}}   /* two lines, broken where the mock breaks; narrower windows wrap naturally */
 .hero h1{font-family:var(--display);font-weight:300;font-size:27px;line-height:1.15;letter-spacing:-.01em;max-width:720px;text-wrap:balance}
 .stage[data-phase="grow"] .hero{transform:translateY(38%);opacity:0;pointer-events:none}
 
@@ -294,10 +295,10 @@ const RECALL_ALL = {
 const UI_ALL = {
   es:{title:'El árbol de las decisiones · Balance Phone', band:'El árbol de las decisiones', start:'Empezar', yes:'Sí', no:'No', cont:'Continuar',
       back:'Volver atrás', reset:'Empezar de nuevo', close:'Cerrar', eg:'Por ejemplo', res:'Recursos', ext:'Recurso externo. ', inEs:'', walk:'Recorrido', map:'Vista general',
-      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico, fundador y director del Proyecto de Salud Mental Piénsatelo Psicología.'},
+      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico,\nfundador y director del Proyecto de Salud Mental Piénsatelo Psicología.'},
   en:{title:'The decision tree · Balance Phone', band:'The decision tree', start:'Start', yes:'Yes', no:'No', cont:'Continue',
       back:'Go back', reset:'Start again', close:'Close', eg:'For example', res:'Resources', ext:'External resource. ', inEs:'In Spanish. ', walk:'Path', map:'Overview',
-      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist, founder and director of the mental health project Piénsatelo Psicología.'}
+      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist,\nfounder and director of the mental health project Piénsatelo Psicología.'}
 };
 /* the language is chosen on the landing, before anything has grown; ?lang=en opens the page in English */
 let LANG = new URLSearchParams(location.search).get('lang')==='en' ? 'en' : 'es';
