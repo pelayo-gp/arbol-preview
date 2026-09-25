@@ -45,6 +45,10 @@ a{color:inherit}
 .hero-copy .lang button{pointer-events:auto;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--b2);text-decoration:underline;text-underline-offset:3px}
 .hero-copy .lang button[aria-selected="true"]{color:var(--ink);text-decoration:none}
 .hero-copy .lang button:hover{color:var(--green-02)}
+/* the collaborating doctor, bottom left of the start screen (Pelayo, 25/09) */
+.credit{position:absolute;left:24px;bottom:24px;display:flex;align-items:flex-end;gap:10px;max-width:520px;pointer-events:none}
+.credit img{display:block;width:88px;height:auto;border:1px solid var(--page)}
+.credit figcaption{font-family:var(--mono);font-weight:400;font-size:10px;line-height:1.5;letter-spacing:.02em;color:var(--b2);text-decoration:underline;text-underline-offset:3px;padding-bottom:2px}
 .hero h1{font-family:var(--display);font-weight:300;font-size:27px;line-height:1.15;letter-spacing:-.01em;max-width:720px;text-wrap:balance}
 .stage[data-phase="grow"] .hero{transform:translateY(38%);opacity:0;pointer-events:none}
 
@@ -109,6 +113,7 @@ a{color:inherit}
   .stage{flex:none;min-height:calc(100dvh - var(--top) - var(--band));overflow:visible}
   .hero{position:relative;height:calc(100dvh - var(--top) - var(--band));}
   .hero h1{font-size:23px}
+  .credit{left:16px;bottom:16px;right:16px;max-width:none} .credit img{width:56px} .credit figcaption{font-size:9px}
   .stage[data-phase="grow"] .hero{display:none}
   .grow{position:relative;inset:auto;display:none;flex-direction:column;min-height:calc(100dvh - var(--top) - var(--band))}
   .stage[data-phase="grow"] .grow{display:flex}
@@ -133,6 +138,7 @@ a{color:inherit}
       <button class="btn" data-start>Empezar</button>
       <div class="lang" role="group" aria-label="Idioma / Language"><button data-lang="es" aria-selected="true">Español</button><button data-lang="en" aria-selected="false">English</button></div>
     </div>
+    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="336"><figcaption id="credit"></figcaption></figure>
   </section>
   <section class="grow" id="grow">
     <div class="treebox" id="treebox">
@@ -286,9 +292,11 @@ const RECALL_ALL = {
 };
 const UI_ALL = {
   es:{title:'El árbol de las decisiones · Balance Phone', band:'El árbol de las decisiones', start:'Empezar', yes:'Sí', no:'No', cont:'Continuar',
-      back:'Volver atrás', reset:'Empezar de nuevo', close:'Cerrar', eg:'Por ejemplo', res:'Recursos', ext:'Recurso externo. ', inEs:'', walk:'Recorrido', map:'Vista general'},
+      back:'Volver atrás', reset:'Empezar de nuevo', close:'Cerrar', eg:'Por ejemplo', res:'Recursos', ext:'Recurso externo. ', inEs:'', walk:'Recorrido', map:'Vista general',
+      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico, fundador y director del Proyecto de Salud Mental Piénsatelo Psicología.'},
   en:{title:'The decision tree · Balance Phone', band:'The decision tree', start:'Start', yes:'Yes', no:'No', cont:'Continue',
-      back:'Go back', reset:'Start again', close:'Close', eg:'For example', res:'Resources', ext:'External resource. ', inEs:'In Spanish. ', walk:'Path', map:'Overview'}
+      back:'Go back', reset:'Start again', close:'Close', eg:'For example', res:'Resources', ext:'External resource. ', inEs:'In Spanish. ', walk:'Path', map:'Overview',
+      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist, founder and director of the mental health project Piénsatelo Psicología.'}
 };
 /* the language is chosen on the landing, before anything has grown; ?lang=en opens the page in English */
 let LANG = new URLSearchParams(location.search).get('lang')==='en' ? 'en' : 'es';
@@ -296,7 +304,7 @@ let T=TT[LANG], UI=UI_ALL[LANG], RECALL=RECALL_ALL[LANG];
 function setLang(l){
   if(!(l in TT)) return; LANG=l; T=TT[l]; UI=UI_ALL[l]; RECALL=RECALL_ALL[l];
   document.documentElement.lang=l; document.title=UI.title; $('.band').textContent=UI.band;
-  $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start;
+  $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start; $('#credit').textContent=UI.credit;
   document.querySelectorAll('.lang button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.lang===l)));
   document.querySelectorAll('.views button').forEach(b=> b.textContent=UI[b.dataset.view]);                 // V2 only
   document.querySelectorAll('.lbl').forEach(d=>{ const n=T[d.dataset.id]; d.textContent=tidy(n.lbl||n.q); });  // V2 only
