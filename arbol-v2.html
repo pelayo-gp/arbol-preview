@@ -152,8 +152,8 @@ a{color:inherit}
 <script src="assets/arbol-v2-data.js?v=3"></script>
 <script>
 /* ═══ content ═══ the eight action stops are the design team's copy (Figma "Semaforo textos (Temporal)", 23/09/2026);
-   the questions are the printed figure; the folds on the questions keep the interview lines (role only, never a name:
-   quiz/ADVICE-PROVENANCE.md). Two languages, one shape. lbl: the short form the overview labels use. es: a resource
+   the questions are the printed figure, with no fold (the interview lines were removed on 28/09/2026 at Pelayo's request;
+   they live on in landing/mapa-conversacion.html and quiz/ADVICE-PROVENANCE.md). Two languages, one shape. lbl: the short form the overview labels use. es: a resource
    that only exists in Spanish, said so when the page is in English. ext: not ours. */
 const LINK = {
   guide:{es:'https://drive.google.com/file/d/1-tDAstOkflKukMufDoFD220uEfSaj8hW/view', en:'https://drive.google.com/file/d/1Z3-CCs40ioGbNfsHoXrd-Ye9Zy1UsdMW/view'},
@@ -177,26 +177,20 @@ const TT = {
 es:{
   start:{q:'¿Sospechas o sabes que tu hijo ha accedido a pornografía?'},
 
-  q1:{k:'q', open:'Ver por qué', q:'¿Estás emocionalmente preparado para hablarlo con calma?',
-    why:'Si te lo tomas con calma no es porque no importe. Es porque quien tienes delante puede tener más miedo que tú.',
-    si:'q2', no:'o1'},
+  q1:{k:'q', q:'¿Estás emocionalmente preparado para hablarlo con calma?', si:'q2', no:'o1'},
   o1:{k:'exit', open:'¿Cómo?', lbl:'Tómate tu tiempo',
     q:'Tómate tu tiempo, reflexiona sobre qué te incomoda, infórmate bien',
     why:'Antes de hablar, date permiso para no tenerlo todo resuelto. Infórmate primero, así llegas a la conversación desde la calma.',
     grab:[{title:'La Guía de la Conversación', what:'PDF descargable con los argumentos y los datos reales sobre qué le hace el porno al cerebro adolescente. Te da el contexto que necesitas para hablar con seguridad.', href:LINK.guide.es},
           {ext:1, es:1, title:'Entrevista a Villena en El Español', what:'Lectura de 5 minutos, clara y sin tecnicismos, sobre los efectos de la pornografía en el cerebro adolescente. Ideal si quieres informarte rápido sin leerte un libro entero.', href:LINK.villena}]},
 
-  q2:{k:'q', open:'Ver por qué', q:'¿Tienes tu objetivo claro?', note:'Escuchar, entender, acompañar. No controlar.',
-    voice:[{t:'Tiene que haber supervisión y acompañamiento. No va de controlar.', who:'Una psicóloga especializada en tecnoadicciones'}],
-    si:'q3', no:'o2'},
+  q2:{k:'q', q:'¿Tienes tu objetivo claro?', note:'Escuchar, entender, acompañar. No controlar.', si:'q3', no:'o2'},
   o2:{k:'exit', open:'¿Cómo?', q:'Define tu propósito',
     why:'Decide qué necesitas de esta conversación en concreto (abrir diálogo, reforzar el vínculo, prevenir un riesgo). Tenerlo claro evita que se te vaya de las manos.',
     grab:[{title:'Quiz', what:'Test breve que usamos con las familias para ver en qué momento está. Te sirve para aclarar qué te preocupa realmente antes de hablar.', href:LINK.quiz.es},
           {ext:1, es:1, title:'Entrevista a Villena en El Español', what:'Lectura de 5 minutos, clara y sin tecnicismos, sobre los efectos de la pornografía en el cerebro adolescente. Ideal si quieres informarte rápido sin leerte un libro entero.', href:LINK.villena}]},
 
-  q3:{k:'q', open:'Ver por qué', q:'¿Has elegido un buen momento y lugar para hablar?',
-    voice:[{t:'Es en la sobremesa, comiendo o cenando, cuando puede estar receptivo. Mira, me ha pasado esto. Y si en ese momento le dices: ahora no, que estoy ocupado, la próxima vez no viene. Y se lo traga.', who:'Un director de colegio de Barcelona, recordando la charla de un psiquiatra infantil a las familias del centro'}],
-    si:'a1', no:'o3'},
+  q3:{k:'q', q:'¿Has elegido un buen momento y lugar para hablar?', si:'a1', no:'o3'},
   o3:{k:'exit', open:'¿Cómo?', lbl:'Busca un entorno tranquilo',
     q:'Asegúrate de que estás en un entorno tranquilo, sin pantallas, sin interrupciones, sin prisas',
     why:'El lugar y el momento importan tanto como lo que dices. Elige un espacio donde ninguno de los dos tenga el móvil encima de la mesa.',
@@ -221,9 +215,7 @@ es:{
     grab:[{ext:1, es:1, title:'Podcast Efecto Pantalla, con Villena', what:'Conversación en formato ligero, con ejemplos reales de cómo preguntar sin que suene a interrogatorio.', href:LINK.podcast}],
     next:'q5'},
 
-  q5:{k:'q', open:'Ver por qué', q:'¿Está tu hijo dispuesto a seguir hablando?',
-    why:'Lo dice una fundación que trabaja con Policía y Guardia Civil: cuando se les pregunta, los propios adolescentes piden protección frente a este contenido. No lo querían ver.',
-    si:'o5', no:'o6'},
+  q5:{k:'q', q:'¿Está tu hijo dispuesto a seguir hablando?', si:'o5', no:'o6'},
   o5:{k:'end', open:'¿Cómo?', lbl:'Explorad juntos herramientas',
     q:'Explorad juntos herramientas: libros, preguntas reflexivas, actividades. Si hace falta, buscad ayuda profesional',
     why:'Esto no acaba en un día. Explorad juntos otras formas de hablar del tema, y si veis señales de que el uso no es puntual, no esperéis a que se resuelva solo.',
@@ -238,26 +230,20 @@ es:{
 en:{
   start:{q:'Do you suspect or know that your child has seen pornography?'},
 
-  q1:{k:'q', open:'See why', q:'Are you emotionally ready to talk about it calmly?',
-    why:'Staying calm is not because it does not matter. It is because the person in front of you may be more afraid than you are.',
-    si:'q2', no:'o1'},
+  q1:{k:'q', q:'Are you emotionally ready to talk about it calmly?', si:'q2', no:'o1'},
   o1:{k:'exit', open:'How?', lbl:'Take your time',
     q:'Take your time, think about what makes you uncomfortable, get well informed',
     why:'Before you talk, give yourself permission not to have it all worked out. Get informed first, so you come to the conversation from a place of calm.',
     grab:[{title:'The Conversation Guide', what:'A downloadable PDF with the arguments and the real data on what pornography does to the teenage brain. It gives you the context you need to talk with confidence.', href:LINK.guide.en},
           {ext:1, title:'NSPCC: talking about online porn', what:'A five-minute read from the UK children\'s charity, clear and free of jargon, on the risks of online pornography and how to raise it with your child. Ideal if you want to get informed quickly without reading a whole book.', href:LINK.nspcc}]},
 
-  q2:{k:'q', open:'See why', q:'Is your goal clear?', note:'To listen, understand and accompany. Not to control.',
-    voice:[{t:'There has to be supervision and accompaniment. It is not about control.', who:'A psychologist specialising in technology addictions'}],
-    si:'q3', no:'o2'},
+  q2:{k:'q', q:'Is your goal clear?', note:'To listen, understand and accompany. Not to control.', si:'q3', no:'o2'},
   o2:{k:'exit', open:'How?', q:'Define your purpose',
     why:'Decide what you need from this particular conversation (to open a dialogue, strengthen the bond, prevent a risk). Being clear about it stops it getting out of hand.',
     grab:[{title:'Quiz', what:'A short questionnaire we use with families to see where their child is at. It helps you work out what really worries you before you talk.', href:LINK.quiz.en},
           {ext:1, title:'Children\'s Commissioner: pornography and young people', what:'A short information sheet with the real numbers for England, from a survey of over a thousand 16 to 21 year olds: when they first saw it, how, and what they make of it. Useful for working out what really worries you before you talk.', href:LINK.ccInfo}]},
 
-  q3:{k:'q', open:'See why', q:'Have you chosen a good time and place to talk?',
-    voice:[{t:'It is at the table after lunch or dinner, when they may be receptive. Look, this happened to me. And if at that moment you say: not now, I am busy, next time they will not come. And they swallow it.', who:'A Barcelona school head, recalling a child psychiatrist’s talk to the school’s families'}],
-    si:'a1', no:'o3'},
+  q3:{k:'q', q:'Have you chosen a good time and place to talk?', si:'a1', no:'o3'},
   o3:{k:'exit', open:'How?', lbl:'Find a calm setting',
     q:'Make sure you are in a calm setting, with no screens, no interruptions and no rush',
     why:'The place and the moment matter as much as what you say. Choose a space where neither of you has a phone on the table.',
@@ -282,9 +268,7 @@ en:{
     grab:[{ext:1, title:'Ask Lisa podcast: my kid looked at porn', what:'Psychologist Lisa Damour on how to raise it and what to say once the conversation gets going. Real examples of how to ask without it sounding like an interrogation.', href:LINK.askLisa}],
     next:'q5'},
 
-  q5:{k:'q', open:'See why', q:'Is your child willing to keep talking?',
-    why:'A foundation that works with the Spanish police says it: when asked, teenagers themselves ask for protection from this content. They did not want to see it.',
-    si:'o5', no:'o6'},
+  q5:{k:'q', q:'Is your child willing to keep talking?', si:'o5', no:'o6'},
   o5:{k:'end', open:'How?', lbl:'Explore tools together',
     q:'Explore tools together: books, reflective questions, activities. If needed, seek professional help',
     why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
