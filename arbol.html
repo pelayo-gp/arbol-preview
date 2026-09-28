@@ -274,8 +274,7 @@ en:{
     why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
     grab:[{title:'Quiz', what:'To keep checking where your child is at as they grow.', href:LINK.quiz.en},
           {title:'The Family Agreement', what:'To adjust the family agreement as they grow.', href:LINK.pact.en},
-          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en},
-          {ext:1, title:'NSPCC Helpline', what:'The UK children\'s charity\'s free line for any adult worried about a child. Where to turn if real professional help is needed.', href:LINK.nspccHelp}]},
+          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en}]},
   o6:{k:'end', open:'How?', lbl:'Thank them for listening',
     q:'Thank them for listening to you.',
     quote:'Thank you for being here. If one day you want to talk more, I am here for you.'}
@@ -419,7 +418,7 @@ function solve(roomOn, heightAt, pref, yNode, room, sh, topMin){
     if(fits) for(let d=36; d<sh; d+=36){ if(t0-d>=topMin) tops.push(t0-d); if(t0+d<=sh-h-room) tops.push(t0+d); }
     for(const side of [pref,other]) for(const top of tops){
       const r=roomOn(side,top,span).room, far=Math.abs(top-t0), away=side===pref?0:60;
-      if(r>=width){ const score=width-.35*far-away; if(!best||score>best.score) best={side, dy:top-yNode, width, score}; }
+      if(r>=width){ const score=width-.35*far-away+.5*Math.min(r-width,200); if(!best||score>best.score) best={side, dy:top-yNode, width, score}; }   // breathing room counts: a cramped own side loses to a roomy other side (Pelayo, 28/09)
       else { const score=r-.12*far-away*.7; if(!fall||score>fall.score) fall={side, dy:top-yNode, width:clamp(r,MINW,width), score}; }
     }
   }

@@ -275,8 +275,7 @@ en:{
     why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
     grab:[{title:'Quiz', what:'To keep checking where your child is at as they grow.', href:LINK.quiz.en},
           {title:'The Family Agreement', what:'To adjust the family agreement as they grow.', href:LINK.pact.en},
-          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en},
-          {ext:1, title:'NSPCC Helpline', what:'The UK children\'s charity\'s free line for any adult worried about a child. Where to turn if real professional help is needed.', href:LINK.nspccHelp}]},
+          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en}]},
   o6:{k:'end', open:'How?', lbl:'Thank them for listening',
     q:'Thank them for listening to you.',
     quote:'Thank you for being here. If one day you want to talk more, I am here for you.'}
@@ -317,9 +316,27 @@ const anchorOf = id => id in EX ? EX[id].tip : TREE.nodes[NODE[id]-1].pt;
 const extOf = id => id in EX ? EX[id].ext : TREE.nodes[NODE[id]-1].loc;    // the ink's own width at that height: words sit outside it
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-/* the ink's edge over a run of rows, from the per-row profile: words never sit on a branch */
-function inkRight(y0,y1){ const p=TREE.prof, a=Math.max(0,Math.floor(Math.min(y0,y1)/p.step)), b=Math.min(p.r.length-1,Math.floor(Math.max(y0,y1)/p.step)); let m=-1; for(let i=a;i<=b;i++) if(p.r[i]>m) m=p.r[i]; return m<0 ? TREE.root[0] : m; }
-function inkLeft(y0,y1){ const p=TREE.prof, a=Math.max(0,Math.floor(Math.min(y0,y1)/p.step)), b=Math.min(p.l.length-1,Math.floor(Math.max(y0,y1)/p.step)); let m=1e9; for(let i=a;i<=b;i++) if(p.l[i]>=0 && p.l[i]<m) m=p.l[i]; return m>1e8 ? TREE.root[0] : m; }
+/* the ink's edge over a run of rows. Only the ink on screen counts: the trunk bands that have started and the exits
+   that have grown. A branch nobody can see must not push the words to the far side (Pelayo, 28/09). The overview
+   shows every branch as a ghost, so there the labels avoid all of it. RAS holds one per-row profile per band and
+   per exit, rasterised once at load; TREE.prof (everything) is the fallback. */
+let RAS=null;
+function profRows(p,y0,y1){ return [Math.max(0,Math.floor(Math.min(y0,y1)/p.step)), Math.min(p.r.length-1,Math.floor(Math.max(y0,y1)/p.step))]; }
+function visibleProfs(){
+  if(!RAS || (typeof view!=='undefined' && view==='map')) return [TREE.prof];
+  const ps=[]; bands.forEach((b,i)=>{ if(u>b.trunk.u0+1e-6) ps.push(RAS.bands[i]); }); exits.forEach((x,i)=>{ if((E[x.id]||0)>0) ps.push(RAS.exits[i]); }); return ps;
+}
+function inkRight(y0,y1){ let m=-1; for(const p of visibleProfs()){ const [a,b]=profRows(p,y0,y1); for(let i=a;i<=b;i++) if(p.r[i]>m) m=p.r[i]; } return m<0 ? TREE.root[0] : m; }
+function inkLeft(y0,y1){ let m=1e9; for(const p of visibleProfs()){ const [a,b]=profRows(p,y0,y1); for(let i=a;i<=b;i++) if(p.l[i]>=0 && p.l[i]<m) m=p.l[i]; } return m>1e8 ? TREE.root[0] : m; }
+function rasterProfile(paths){                 // per-row ink extents of a set of fill paths, drawn once at half scale
+  const sc=.5, cw=Math.ceil(W*sc), ch=Math.ceil(H*sc), cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+  const cx=cv.getContext('2d',{willReadFrequently:true}); cx.scale(sc,sc); cx.fillStyle='#000';
+  for(const d of paths) cx.fill(new Path2D(d),'evenodd');
+  const img=cx.getImageData(0,0,cw,ch).data, step=TREE.prof.step, rows=TREE.prof.r.length, l=new Array(rows).fill(-1), r=new Array(rows).fill(-1);
+  for(let y=0;y<ch;y++){ let a=-1,b=-1; const o=y*cw*4; for(let x=0;x<cw;x++){ if(img[o+x*4+3]>40){ if(a<0) a=x; b=x; } }
+    if(a>=0){ const row=Math.min(rows-1,Math.floor(y/sc/step)), L=a/sc, R=(b+1)/sc; if(l[row]<0||L<l[row]) l[row]=L; if(R>r[row]) r[row]=R; } }
+  return {step,l,r};
+}
 const tidy = s => s.replace(/ (\S+)$/, '\u00A0$1');      // never a lone word on the last line of a title
 
 const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
@@ -373,6 +390,7 @@ const seedEl=document.createElementNS(NS,'circle'); seedEl.setAttribute('cx',TRE
 seedEl.setAttribute('r',9); seedEl.setAttribute('fill','currentColor'); live.append(seedEl);
 
 let u=0; const E={}; exits.forEach(x=> E[x.id]=0);
+try { RAS={ bands: TREE.bands.map(b=> rasterProfile([b.ink])), exits: TREE.exits.map(e=> rasterProfile([e.ink])) }; } catch(err){ RAS=null; }   // no canvas: fall back to the whole-tree profile
 function render(uu){
   u=uu;
   for(const b of bands){
@@ -459,7 +477,7 @@ function solve(roomOn, heightAt, pref, yNode, room, sh, topMin){
     if(fits) for(let d=36; d<sh; d+=36){ if(t0-d>=topMin) tops.push(t0-d); if(t0+d<=sh-h-room) tops.push(t0+d); }
     for(const side of [pref,other]) for(const top of tops){
       const r=roomOn(side,top,span).room, far=Math.abs(top-t0), away=side===pref?0:60;
-      if(r>=width){ const score=width-.35*far-away; if(!best||score>best.score) best={side, dy:top-yNode, width, score}; }
+      if(r>=width){ const score=width-.35*far-away+.5*Math.min(r-width,200); if(!best||score>best.score) best={side, dy:top-yNode, width, score}; }   // breathing room counts: a cramped own side loses to a roomy other side (Pelayo, 28/09)
       else { const score=r-.12*far-away*.7; if(!fall||score>fall.score) fall={side, dy:top-yNode, width:clamp(r,MINW,width), score}; }
     }
   }
