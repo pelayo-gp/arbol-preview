@@ -80,9 +80,9 @@ a{color:inherit}
 .panel .note{margin-top:8px;color:var(--b2);font-size:15px}
 .choices{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 .links{display:flex;gap:22px;margin-top:14px}
-.links button,.views button{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+.links button,.views button,.res-close{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
   text-decoration:underline;text-underline-offset:3px}
-.links button:hover,.views button:hover{color:var(--green-02)}
+.links button:hover,.views button:hover,.res-close:hover{color:var(--green-02)}
 .more{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-family:var(--mono);font-weight:400;font-size:11px;
   letter-spacing:.08em;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
 .more::before{content:"";width:9px;height:9px;background:var(--ink);border-radius:50%;flex:0 0 auto}
@@ -113,7 +113,10 @@ a{color:inherit}
 .lbl[data-side="left"]{text-align:right}
 .stage[data-view="map"] .lbl{opacity:.45}
 .stage[data-view="map"] .lbl.is-seen{opacity:1}
-.grow .credit{display:none} .stage[data-view="map"] .grow .credit{display:flex}   /* the collaboration shows again with the whole tree (Pelayo, 29/09) */
+.grow .credit{display:none} .stage[data-view="map"] .grow .credit{display:flex}
+/* the resources of the last stop, reachable from any stop (Pelayo, 29/09) */
+.res{position:absolute;right:22px;top:48px;width:340px;max-height:calc(100% - 72px);overflow:auto;background:var(--card);padding:6px 0 12px 12px;z-index:5}
+.res[hidden]{display:none} .res-head{display:flex;justify-content:space-between;align-items:center;gap:16px} .res-head .lab{color:var(--green-02)}   /* the collaboration shows again with the whole tree (Pelayo, 29/09) */
 @media (max-width:900px){
   body{overflow:auto}
   .stage{flex:none;min-height:calc(100dvh - var(--top) - var(--band));overflow:visible}
@@ -128,6 +131,7 @@ a{color:inherit}
   .panel{position:static;width:auto;padding:16px 20px 40px;opacity:1;pointer-events:auto}
   .stage[data-view="map"] .panel{display:none}
   .stage[data-view="map"] .grow .credit{position:static;padding:16px 20px 32px}
+  .res{position:static;width:auto;max-height:none;padding:16px 20px 24px}
   .panel .panel-scroll{max-height:none}
 }
 </style>
@@ -143,15 +147,16 @@ a{color:inherit}
       <div class="lang" role="group" aria-label="Idioma / Language"><button data-lang="es" aria-selected="true">Español</button><button data-lang="en" aria-selected="false">English</button></div>
     </div>
     <div class="turnbox"><canvas class="turn" id="turn" width="754" height="1400" aria-hidden="true"></canvas></div>
-    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="336"><figcaption id="credit" class="credit-text"></figcaption></figure>
+    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="288"><figcaption id="credit" class="credit-text"></figcaption></figure>
   </section>
   <section class="grow" id="grow">
     <div class="cam" id="cam">
       <div class="world" id="world"></div>
       <div class="labels" id="labels"></div>
-      <div class="views"><button data-view="walk" aria-selected="true">Recorrido</button><button data-view="map" aria-selected="false">Vista general</button></div>
+      <div class="views"><button data-view="walk" aria-selected="true">Recorrido</button><button data-view="map" aria-selected="false">Vista general</button><button data-res aria-selected="false">Recursos</button></div>
     </div>
-    <figure class="credit map-credit" aria-hidden="true"><img src="assets/villena.jpg" alt="" width="220" height="336"><figcaption class="credit-text"></figcaption></figure>
+    <aside class="res" id="res" hidden><div class="res-head"><span class="mono lab">Recursos</span><button class="res-close" data-res>Cerrar</button></div><div class="res-body" id="resbody"></div></aside>
+    <figure class="credit map-credit" aria-hidden="true"><img src="assets/villena.jpg" alt="" width="220" height="288"><figcaption class="credit-text"></figcaption></figure>
     <div class="panel" id="panel" data-side="right"><div class="panel-scroll" id="pscroll"></div></div>
   </section>
 </main>
@@ -170,6 +175,7 @@ const LINK = {
   faber:'https://www.amazon.es/hablar-ni%C3%B1os-escuchen-escuchar-hablen/dp/0060730889',
   podcast:'https://open.spotify.com/episode/58wniEGa0E5WYoURLYzPLA',
   duv:'https://www.daleunavuelta.org/',
+  pp:'https://piensatelopsicologia.es/',   /* the professional's own project; he left DUV (his note, 29/09/2026) */
   /* English-language equivalents, verified live 25/09/2026 */
   nspcc:'https://www.nspcc.org.uk/keeping-children-safe/online-safety/inappropriate-explicit-content/online-porn/',
   nspccHelp:'https://www.nspcc.org.uk/keeping-children-safe/our-services/nspcc-helpline/',
@@ -229,7 +235,7 @@ es:{
     grab:[{title:'Quiz', what:'Para seguir revisando en qué momento está a medida que crece.', href:LINK.quiz.es},
           {title:'Un pacto digital', what:'Para ajustar el acuerdo familiar a medida que crece.', href:LINK.pact.es},
           {title:'El semáforo del riesgo', what:'Herramientas de prevención más a fondo, del propio Villena: tres niveles de consumo, qué es cada uno, qué consecuencias tiene y las claves para actuar. PDF de una página.', href:LINK.semaforo.es},
-          {ext:1, es:1, title:'Asociación Dale Una Vuelta (DUV)', what:'Dirigida clínicamente por Villena. El recurso al que derivar si hace falta ayuda profesional real.', href:LINK.duv}]},
+          {ext:1, title:'Piénsatelo Psicología', what:'El proyecto de salud mental de Villena, especializado en adicciones comportamentales y con atención clínica. El recurso al que acudir si hace falta ayuda profesional.', href:LINK.pp}]},
   o6:{k:'end', open:'¿Cómo?', lbl:'Agradece que te haya escuchado',
     q:'Agradece que te haya escuchado.',
     quote:'Gracias por estar aquí, si algún día quieres hablar más, estoy para ti.'}
@@ -281,7 +287,8 @@ en:{
     why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
     grab:[{title:'Quiz', what:'To keep checking where your child is at as they grow.', href:LINK.quiz.en},
           {title:'The Family Agreement', what:'To adjust the family agreement as they grow.', href:LINK.pact.en},
-          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en}]},
+          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en},
+          {ext:1, es:1, title:'Piénsatelo Psicología', what:'Villena\'s mental health project, specialising in behavioural addictions, with clinical care. Where to turn if professional help is needed.', href:LINK.pp}]},
   o6:{k:'end', open:'How?', lbl:'Thank them for listening',
     q:'Thank them for listening to you.',
     quote:'Thank you for being here. If one day you want to talk more, I am here for you.'}
@@ -293,10 +300,10 @@ const RECALL_ALL = {
 const UI_ALL = {
   es:{title:'El árbol de las decisiones · Balance Phone', band:'El árbol de las decisiones', start:'Empezar', yes:'Sí', no:'No', cont:'Continuar',
       back:'Volver atrás', reset:'Empezar de nuevo', close:'Cerrar', eg:'Por ejemplo', res:'Recursos', ext:'Recurso externo. ', inEs:'', walk:'Recorrido', map:'Vista general',
-      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico,\nfundador y director del Proyecto de Salud Mental Piénsatelo Psicología.'},
+      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico, fundador y director de\nPiénsatelo Psicología (piensatelopsicologia.es), proyecto de salud mental especializado\nen adicciones comportamentales, con atención clínica.'},
   en:{title:'The decision tree · Balance Phone', band:'The decision tree', start:'Start', yes:'Yes', no:'No', cont:'Continue',
       back:'Go back', reset:'Start again', close:'Close', eg:'For example', res:'Resources', ext:'External resource. ', inEs:'In Spanish. ', walk:'Path', map:'Overview',
-      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist,\nfounder and director of the mental health project Piénsatelo Psicología.'}
+      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist, founder and director of\nPiénsatelo Psicología (piensatelopsicologia.es), a mental health project specialising\nin behavioural addictions, with clinical care.'}
 };
 /* the language is chosen on the landing, before anything has grown; ?lang=en opens the page in English */
 let LANG = new URLSearchParams(location.search).get('lang')==='en' ? 'en' : 'es';
@@ -306,7 +313,8 @@ function setLang(l){
   document.documentElement.lang=l; document.title=UI.title; $('.band-title').textContent=UI.band;
   $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start; document.querySelectorAll('.credit-text').forEach(el=> el.textContent=UI.credit);
   document.querySelectorAll('.lang button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.lang===l)));
-  document.querySelectorAll('.views button').forEach(b=> b.textContent=UI[b.dataset.view]);                 // V2 only
+  document.querySelectorAll('.views button[data-view]').forEach(b=> b.textContent=UI[b.dataset.view]);     // V2 only
+  document.querySelectorAll('.views [data-res], .res-head .lab').forEach(el=> el.textContent=UI.res); document.querySelectorAll('.res-close').forEach(el=> el.textContent=UI.close);
   document.querySelectorAll('.lbl').forEach(d=>{ const n=T[d.dataset.id]; d.textContent=tidy(n.lbl||n.q); });  // V2 only
 }
 
@@ -451,10 +459,13 @@ function tick(){
 
 /* ═══ the words beside the current stop ═══ */
 let here='q1', path=[], busy=false;
+function grabsOf(n){ return (n.grab||[]).map(g=>`<a class="grab" href="${g.href}" target="_blank" rel="noopener"><span class="tile"><span>${esc(g.title)}</span><i>&darr;</i></span><p>${g.ext?UI.ext:''}${g.es?UI.inEs:''}${esc(g.what)}</p></a>`).join(''); }
+const resEl=$('#res');
+function toggleRes(open){ open = open===undefined ? resEl.hidden : open; if(open) $('#resbody').innerHTML=grabsOf(T.o5); resEl.hidden=!open; $('.views [data-res]').setAttribute('aria-selected', String(open)); }
 function html(id){
   const n=T[id], isQ=n.k==='q', isEnd=n.k==='exit'||n.k==='end';
   const voices=(n.voice||[]).map(v=>`<figure class="voice"><blockquote><p>${esc(v.t)}</p></blockquote><figcaption>${esc(v.who)}</figcaption></figure>`).join('');
-  const grabs=(n.grab||[]).map(g=>`<a class="grab" href="${g.href}" target="_blank" rel="noopener"><span class="tile"><span>${esc(g.title)}</span><i>&darr;</i></span><p>${g.ext?UI.ext:''}${g.es?UI.inEs:''}${esc(g.what)}</p></a>`).join('');
+  const grabs=grabsOf(n);
   const hidden=[ n.say?`<p class="say">${esc(n.say)}</p>`:'', n.quote?`<div class="quote"><span class="mono lab">${UI.eg}</span><p>${esc(n.quote)}</p></div>`:'',
     n.why?`<p class="why">${esc(n.why)}</p>`:'', voices, grabs?`<span class="mono lab res">${UI.res}</span>`+grabs:'', isEnd?`<p class="recall">${esc(RECALL)}</p>`:'' ].filter(Boolean).join('');
   const choices = isQ ? `<div class="choices"><button class="btn" data-pick="si">${UI.yes}</button><button class="btn alt" data-pick="no">${UI.no}</button></div>`
@@ -599,6 +610,7 @@ document.addEventListener('click', e=>{
   if('back' in b.dataset) return back();
   if('reset' in b.dataset) return reset();
   if(b.dataset.view) return setView(b.dataset.view);
+  if('res' in b.dataset) return toggleRes();
 });
 document.addEventListener('keydown', e=>{
   if(e.metaKey||e.ctrlKey||e.altKey) return; const k=e.key.toLowerCase();

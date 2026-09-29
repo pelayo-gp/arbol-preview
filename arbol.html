@@ -142,7 +142,7 @@ a{color:inherit}
       <div class="lang" role="group" aria-label="Idioma / Language"><button data-lang="es" aria-selected="true">Español</button><button data-lang="en" aria-selected="false">English</button></div>
     </div>
     <div class="turnbox"><canvas class="turn" id="turn" width="754" height="1400" aria-hidden="true"></canvas></div>
-    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="336"><figcaption id="credit" class="credit-text"></figcaption></figure>
+    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="288"><figcaption id="credit" class="credit-text"></figcaption></figure>
   </section>
   <section class="grow" id="grow">
     <div class="treebox" id="treebox">
@@ -166,6 +166,7 @@ const LINK = {
   faber:'https://www.amazon.es/hablar-ni%C3%B1os-escuchen-escuchar-hablen/dp/0060730889',
   podcast:'https://open.spotify.com/episode/58wniEGa0E5WYoURLYzPLA',
   duv:'https://www.daleunavuelta.org/',
+  pp:'https://piensatelopsicologia.es/',   /* the professional's own project; he left DUV (his note, 29/09/2026) */
   /* English-language equivalents, verified live 25/09/2026 */
   nspcc:'https://www.nspcc.org.uk/keeping-children-safe/online-safety/inappropriate-explicit-content/online-porn/',
   nspccHelp:'https://www.nspcc.org.uk/keeping-children-safe/our-services/nspcc-helpline/',
@@ -225,7 +226,7 @@ es:{
     grab:[{title:'Quiz', what:'Para seguir revisando en qué momento está a medida que crece.', href:LINK.quiz.es},
           {title:'Un pacto digital', what:'Para ajustar el acuerdo familiar a medida que crece.', href:LINK.pact.es},
           {title:'El semáforo del riesgo', what:'Herramientas de prevención más a fondo, del propio Villena: tres niveles de consumo, qué es cada uno, qué consecuencias tiene y las claves para actuar. PDF de una página.', href:LINK.semaforo.es},
-          {ext:1, es:1, title:'Asociación Dale Una Vuelta (DUV)', what:'Dirigida clínicamente por Villena. El recurso al que derivar si hace falta ayuda profesional real.', href:LINK.duv}]},
+          {ext:1, title:'Piénsatelo Psicología', what:'El proyecto de salud mental de Villena, especializado en adicciones comportamentales y con atención clínica. El recurso al que acudir si hace falta ayuda profesional.', href:LINK.pp}]},
   o6:{k:'end', open:'¿Cómo?', lbl:'Agradece que te haya escuchado',
     q:'Agradece que te haya escuchado.',
     quote:'Gracias por estar aquí, si algún día quieres hablar más, estoy para ti.'}
@@ -277,7 +278,8 @@ en:{
     why:'This does not end in a day. Explore other ways of talking about it together, and if you see signs that the use is not occasional, do not wait for it to sort itself out.',
     grab:[{title:'Quiz', what:'To keep checking where your child is at as they grow.', href:LINK.quiz.en},
           {title:'The Family Agreement', what:'To adjust the family agreement as they grow.', href:LINK.pact.en},
-          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en}]},
+          {title:'The risk traffic light', what:'Prevention tools in more depth, from Villena himself: three levels of use, what each one is, its consequences and the key points for acting. A one-page PDF.', href:LINK.semaforo.en},
+          {ext:1, es:1, title:'Piénsatelo Psicología', what:'Villena\'s mental health project, specialising in behavioural addictions, with clinical care. Where to turn if professional help is needed.', href:LINK.pp}]},
   o6:{k:'end', open:'How?', lbl:'Thank them for listening',
     q:'Thank them for listening to you.',
     quote:'Thank you for being here. If one day you want to talk more, I am here for you.'}
@@ -289,10 +291,10 @@ const RECALL_ALL = {
 const UI_ALL = {
   es:{title:'El árbol de las decisiones · Balance Phone', band:'El árbol de las decisiones', start:'Empezar', yes:'Sí', no:'No', cont:'Continuar',
       back:'Volver atrás', reset:'Empezar de nuevo', close:'Cerrar', eg:'Por ejemplo', res:'Recursos', ext:'Recurso externo. ', inEs:'', walk:'Recorrido', map:'Vista general',
-      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico,\nfundador y director del Proyecto de Salud Mental Piénsatelo Psicología.'},
+      credit:'*En colaboración con Alejandro Villena, psicólogo y sexólogo clínico, fundador y director de\nPiénsatelo Psicología (piensatelopsicologia.es), proyecto de salud mental especializado\nen adicciones comportamentales, con atención clínica.'},
   en:{title:'The decision tree · Balance Phone', band:'The decision tree', start:'Start', yes:'Yes', no:'No', cont:'Continue',
       back:'Go back', reset:'Start again', close:'Close', eg:'For example', res:'Resources', ext:'External resource. ', inEs:'In Spanish. ', walk:'Path', map:'Overview',
-      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist,\nfounder and director of the mental health project Piénsatelo Psicología.'}
+      credit:'*In collaboration with Alejandro Villena, clinical psychologist and sexologist, founder and director of\nPiénsatelo Psicología (piensatelopsicologia.es), a mental health project specialising\nin behavioural addictions, with clinical care.'}
 };
 /* the language is chosen on the landing, before anything has grown; ?lang=en opens the page in English */
 let LANG = new URLSearchParams(location.search).get('lang')==='en' ? 'en' : 'es';
