@@ -38,13 +38,13 @@ a{color:inherit}
 .stage{flex:1;position:relative;overflow:hidden;background:var(--card);min-height:0}
 
 /* landing: the turning tree, the question over it, one button */
-.hero{position:absolute;inset:0;display:grid;grid-template-rows:100%;place-items:center;transition:transform 1s var(--ease),opacity .9s ease}   /* words over the tree here, the one place that is allowed (designer, 23/09) */
-.hero .turn{height:calc(100% - 40px);width:auto;max-width:100%;display:block;justify-self:center;opacity:.8}   /* dimmed a little, Pelayo 22/09 */
-.hero-copy{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 24px;text-align:center;
-  pointer-events:none}   /* the cursor reaches the tree through the words; only the button catches it */
-.hero-copy .btn{pointer-events:auto}
+.hero{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:44px 24px 24px;transition:transform 1s var(--ease),opacity .9s ease}   /* the words on top, the tree beneath them (Pelayo, 29/09) */
+.hero-copy{display:flex;flex-direction:column;align-items:center;gap:18px;padding:0;text-align:center}
+.hero-copy .btn{min-height:44px;min-width:150px;font-size:20px;padding:6px 28px}
+.hero .turnbox{flex:1 1 0;min-height:0;width:100%;display:flex;justify-content:center;margin-top:14px}
+.hero .turn{height:100%;width:auto;max-width:100%;display:block;opacity:.8}   /* dimmed a little, Pelayo 22/09 */
 .hero-copy .lang{display:flex;gap:22px;margin-top:6px}   /* the language, chosen before anything grows */
-.hero-copy .lang button{pointer-events:auto;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--b2);text-decoration:underline;text-underline-offset:3px}
+.hero-copy .lang button{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--b2);text-decoration:underline;text-underline-offset:3px}
 .hero-copy .lang button[aria-selected="true"]{color:var(--ink);text-decoration:none}
 .hero-copy .lang button:hover{color:var(--green-02)}
 /* the collaborating doctor, bottom left of the start screen (Pelayo, 25/09) */
@@ -52,7 +52,7 @@ a{color:inherit}
 .credit img{display:block;width:88px;height:auto;border:1px solid var(--page)}
 .credit figcaption{font-family:var(--mono);font-weight:400;font-size:10px;line-height:1.5;letter-spacing:.02em;color:var(--b2);text-decoration:underline;text-underline-offset:3px;padding-bottom:2px}
 @media (min-width:1360px){.credit{max-width:none} .credit figcaption{white-space:pre-line}}   /* two lines, broken where the mock breaks; narrower windows wrap naturally */
-.hero h1{font-family:var(--display);font-weight:300;font-size:27px;line-height:1.15;letter-spacing:-.01em;max-width:720px;text-wrap:balance}
+.hero h1{font-family:var(--display);font-weight:300;font-size:30px;line-height:1.15;letter-spacing:-.01em;max-width:760px;text-wrap:balance}
 .stage[data-phase="grow"] .hero{transform:translateY(38%);opacity:0;pointer-events:none}
 
 /* the shop-style controls as the mock draws them: warm fill, no outline */
@@ -113,19 +113,21 @@ a{color:inherit}
 .lbl[data-side="left"]{text-align:right}
 .stage[data-view="map"] .lbl{opacity:.45}
 .stage[data-view="map"] .lbl.is-seen{opacity:1}
+.grow .credit{display:none} .stage[data-view="map"] .grow .credit{display:flex}   /* the collaboration shows again with the whole tree (Pelayo, 29/09) */
 @media (max-width:900px){
   body{overflow:auto}
   .stage{flex:none;min-height:calc(100dvh - var(--top) - var(--band));overflow:visible}
   .hero{position:relative;height:calc(100dvh - var(--top) - var(--band))}
-  .hero h1{font-size:23px}
+  .hero{padding:24px 16px 16px} .hero h1{font-size:24px}
   .band{flex:none;flex-direction:column;gap:3px;min-height:var(--band);padding:10px 16px} .byline{position:static;transform:none;font-size:10px}
-  .credit{left:16px;bottom:16px;right:16px;max-width:none} .credit img{width:56px} .credit figcaption{font-size:9px}
+  .hero .credit{position:static;margin-top:14px;align-self:flex-start;max-width:none} .credit img{width:56px} .credit figcaption{font-size:9px}   /* on phones the credit sits under the tree, not across it */
   .stage[data-phase="grow"] .hero{display:none}
   .grow{position:relative;inset:auto;display:none;flex-direction:column;min-height:calc(100dvh - var(--top) - var(--band))}
   .stage[data-phase="grow"] .grow{display:flex}
   .cam{position:relative;inset:auto;height:54dvh;flex:0 0 auto}
   .panel{position:static;width:auto;padding:16px 20px 40px;opacity:1;pointer-events:auto}
   .stage[data-view="map"] .panel{display:none}
+  .stage[data-view="map"] .grow .credit{position:static;padding:16px 20px 32px}
   .panel .panel-scroll{max-height:none}
 }
 </style>
@@ -135,13 +137,13 @@ a{color:inherit}
 <div class="band"><span class="band-title">El árbol de las decisiones</span><span class="byline">Balance Phone x Alejandro Villena</span></div>
 <main class="stage" id="stage" data-phase="landing" data-view="walk">
   <section class="hero" id="hero">
-    <canvas class="turn" id="turn" width="754" height="1400" aria-hidden="true"></canvas>
     <div class="hero-copy">
       <h1 id="heroq"></h1>
       <button class="btn" data-start>Empezar</button>
       <div class="lang" role="group" aria-label="Idioma / Language"><button data-lang="es" aria-selected="true">Español</button><button data-lang="en" aria-selected="false">English</button></div>
     </div>
-    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="336"><figcaption id="credit"></figcaption></figure>
+    <div class="turnbox"><canvas class="turn" id="turn" width="754" height="1400" aria-hidden="true"></canvas></div>
+    <figure class="credit"><img src="assets/villena.jpg" alt="Alejandro Villena" width="220" height="336"><figcaption id="credit" class="credit-text"></figcaption></figure>
   </section>
   <section class="grow" id="grow">
     <div class="cam" id="cam">
@@ -149,6 +151,7 @@ a{color:inherit}
       <div class="labels" id="labels"></div>
       <div class="views"><button data-view="walk" aria-selected="true">Recorrido</button><button data-view="map" aria-selected="false">Vista general</button></div>
     </div>
+    <figure class="credit map-credit" aria-hidden="true"><img src="assets/villena.jpg" alt="" width="220" height="336"><figcaption class="credit-text"></figcaption></figure>
     <div class="panel" id="panel" data-side="right"><div class="panel-scroll" id="pscroll"></div></div>
   </section>
 </main>
@@ -301,7 +304,7 @@ let T=TT[LANG], UI=UI_ALL[LANG], RECALL=RECALL_ALL[LANG];
 function setLang(l){
   if(!(l in TT)) return; LANG=l; T=TT[l]; UI=UI_ALL[l]; RECALL=RECALL_ALL[l];
   document.documentElement.lang=l; document.title=UI.title; $('.band-title').textContent=UI.band;
-  $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start; $('#credit').textContent=UI.credit;
+  $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start; document.querySelectorAll('.credit-text').forEach(el=> el.textContent=UI.credit);
   document.querySelectorAll('.lang button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.lang===l)));
   document.querySelectorAll('.views button').forEach(b=> b.textContent=UI[b.dataset.view]);                 // V2 only
   document.querySelectorAll('.lbl').forEach(d=>{ const n=T[d.dataset.id]; d.textContent=tidy(n.lbl||n.q); });  // V2 only
