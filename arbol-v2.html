@@ -44,8 +44,8 @@ a{color:inherit}
 .hero .turnbox{flex:1 1 0;min-height:0;width:100%;display:flex;justify-content:center;margin-top:14px}
 .hero .turn{height:100%;width:auto;max-width:100%;display:block;opacity:.8}   /* dimmed a little, Pelayo 22/09 */
 .hero-copy .lang{display:flex;gap:22px;margin-top:6px}   /* the language, chosen before anything grows */
-.hero-copy .lang button{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--b2);text-decoration:underline;text-underline-offset:3px}
-.hero-copy .lang button[aria-selected="true"]{color:var(--ink);text-decoration:none}
+.hero-copy .lang button{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--b2);text-decoration:none;text-underline-offset:3px}
+.hero-copy .lang button[aria-selected="true"]{color:var(--ink);text-decoration:underline}   /* the underline marks the one in use (Pelayo, 29/09) */
 .hero-copy .lang button:hover{color:var(--green-02)}
 /* the collaborating doctor, bottom left of the start screen (Pelayo, 25/09) */
 .credit{position:absolute;left:24px;bottom:24px;display:flex;align-items:flex-end;gap:10px;max-width:520px;pointer-events:none}
@@ -107,7 +107,7 @@ a{color:inherit}
 .inner .recall{margin-top:14px;color:var(--b2);font-size:14px;line-height:1.45}
 .panel .panel-scroll{max-height:100%;overflow:auto}
 .views{position:absolute;top:18px;right:22px;display:flex;gap:20px;z-index:4}
-.views button{color:var(--b2)} .views button[aria-selected="true"]{color:var(--ink)}
+.views button{color:var(--b2);text-decoration:none} .views button[aria-selected="true"]{color:var(--ink);text-decoration:underline}   /* same rule as the languages */
 .lbl{position:absolute;max-width:172px;font-family:var(--display);font-weight:300;font-size:14px;line-height:1.2;color:var(--ink);text-wrap:balance;
   opacity:0;transition:opacity .45s ease;pointer-events:none;transform:translateY(-50%)}
 .lbl[data-side="left"]{text-align:right}
