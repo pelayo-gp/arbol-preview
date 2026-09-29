@@ -115,8 +115,9 @@ a{color:inherit}
 .stage[data-view="map"] .lbl.is-seen{opacity:1}
 .grow .credit{display:none} .stage[data-view="map"] .grow .credit{display:flex}
 /* the resources of the last stop, reachable from any stop (Pelayo, 29/09) */
-.res{position:absolute;right:22px;top:48px;width:340px;max-height:calc(100% - 72px);overflow:auto;background:var(--card);padding:6px 0 12px 12px;z-index:5}
-.res[hidden]{display:none} .res-head{display:flex;justify-content:space-between;align-items:center;gap:16px} .res-head .lab{color:var(--green-02)}   /* the collaboration shows again with the whole tree (Pelayo, 29/09) */
+.resbox{position:absolute;right:22px;top:48px;width:340px;max-height:calc(100% - 72px);overflow:auto;background:var(--card);padding:6px 0 12px 12px;z-index:5}   /* NOT .res: that class is the Recursos label inside every fold */
+.resbox{display:none} .stage[data-view="res"] .resbox{display:block} .stage[data-view="res"] .panel{opacity:0;pointer-events:none}   /* a view of its own: the walk panel hides while it is open */
+.res-head{display:flex;justify-content:space-between;align-items:center;gap:16px} .res-head .lab{color:var(--green-02)}   /* the collaboration shows again with the whole tree (Pelayo, 29/09) */
 @media (max-width:900px){
   body{overflow:auto}
   .stage{flex:none;min-height:calc(100dvh - var(--top) - var(--band));overflow:visible}
@@ -131,7 +132,7 @@ a{color:inherit}
   .panel{position:static;width:auto;padding:16px 20px 40px;opacity:1;pointer-events:auto}
   .stage[data-view="map"] .panel{display:none}
   .stage[data-view="map"] .grow .credit{position:static;padding:16px 20px 32px}
-  .res{position:static;width:auto;max-height:none;padding:16px 20px 24px}
+  .resbox{position:static;width:auto;max-height:none;padding:16px 20px 24px} .stage[data-view="res"] .panel{display:none}
   .panel .panel-scroll{max-height:none}
 }
 </style>
@@ -153,9 +154,9 @@ a{color:inherit}
     <div class="cam" id="cam">
       <div class="world" id="world"></div>
       <div class="labels" id="labels"></div>
-      <div class="views"><button data-view="walk" aria-selected="true">Recorrido</button><button data-view="map" aria-selected="false">Vista general</button><button data-res aria-selected="false">Recursos</button></div>
+      <div class="views"><button data-view="walk" aria-selected="true">Recorrido</button><button data-view="map" aria-selected="false">Vista general</button><button data-view="res" aria-selected="false">Recursos</button></div>
     </div>
-    <aside class="res" id="res" hidden><div class="res-head"><span class="mono lab">Recursos</span><button class="res-close" data-res>Cerrar</button></div><div class="res-body" id="resbody"></div></aside>
+    <aside class="resbox" id="res"><div class="res-head"><span class="mono lab">Recursos</span><button class="res-close" data-view="walk">Cerrar</button></div><div class="res-body" id="resbody"></div></aside>
     <figure class="credit map-credit" aria-hidden="true"><img src="assets/villena.jpg" alt="" width="220" height="288"><figcaption class="credit-text"></figcaption></figure>
     <div class="panel" id="panel" data-side="right"><div class="panel-scroll" id="pscroll"></div></div>
   </section>
@@ -314,7 +315,7 @@ function setLang(l){
   $('#heroq').textContent=tidy(T.start.q); $('[data-start]').textContent=UI.start; document.querySelectorAll('.credit-text').forEach(el=> el.textContent=UI.credit);
   document.querySelectorAll('.lang button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.lang===l)));
   document.querySelectorAll('.views button[data-view]').forEach(b=> b.textContent=UI[b.dataset.view]);     // V2 only
-  document.querySelectorAll('.views [data-res], .res-head .lab').forEach(el=> el.textContent=UI.res); document.querySelectorAll('.res-close').forEach(el=> el.textContent=UI.close);
+  document.querySelectorAll('.res-head .lab').forEach(el=> el.textContent=UI.res); document.querySelectorAll('.res-close').forEach(el=> el.textContent=UI.close);
   document.querySelectorAll('.lbl').forEach(d=>{ const n=T[d.dataset.id]; d.textContent=tidy(n.lbl||n.q); });  // V2 only
 }
 
@@ -432,7 +433,9 @@ const C={x:TREE.root[0], y:TREE.root[1], s:.6}, TG={x:C.x, y:C.y, s:C.s};
 let view='walk', settled=false, userHeld=false;
 const camW=()=>camEl.clientWidth, camH=()=>camEl.clientHeight;
 const S_FOLLOW=()=> clamp(Math.min(camH()/1150, (camW()-(MINW+GAP+2*MRG))/W), .3, 1.1);   // about three nodes of height in view, and never wider than the window leaves room for the words
-const S_FIT=()=> Math.min((camW()-60)/W, (camH()-60)/H);
+const MAPB=()=> phone()?0:150;                                   // the overview leaves this band at the bottom for the credit (29/09)
+const S_FIT=()=> Math.min((camW()-60)/W, (camH()-60-MAPB())/H);
+const MAP_Y=()=> H/2 + MAPB()/2/S_FIT();                          // the tree's centre sits above the band
 const toScreen=(p)=>({x:(p[0]-C.x)*C.s + camW()/2, y:(p[1]-C.y)*C.s + camH()/2});
 const TRUNK_X = TREE.nodes.reduce((a,n)=>a+n.pt[0],0)/TREE.nodes.length;   // the tree keeps one place on screen: only the height follows
 function aim(point, side){
@@ -443,7 +446,7 @@ function applyCam(){ world.style.transform=`translate(${(camW()/2-C.x*C.s).toFix
 function clampMap(){
   const hw=camW()/2/C.s, hh=camH()/2/C.s, m=80;
   C.x = (W+2*m) <= hw*2 ? W/2 : clamp(C.x, -m+hw, W+m-hw);
-  C.y = (H+2*m) <= hh*2 ? H/2 : clamp(C.y, -m+hh, H+m-hh);
+  const hb=MAPB()/2/C.s; C.y = (H+2*m) <= (hh-hb)*2 ? H/2+hb : clamp(C.y, -m+hh, H+m-hh+2*hb);
 }
 function tick(){
   if(!userHeld && !settled){
@@ -461,7 +464,6 @@ function tick(){
 let here='q1', path=[], busy=false;
 function grabsOf(n){ return (n.grab||[]).map(g=>`<a class="grab" href="${g.href}" target="_blank" rel="noopener"><span class="tile"><span>${esc(g.title)}</span><i>&darr;</i></span><p>${g.ext?UI.ext:''}${g.es?UI.inEs:''}${esc(g.what)}</p></a>`).join(''); }
 const resEl=$('#res');
-function toggleRes(open){ open = open===undefined ? resEl.hidden : open; if(open) $('#resbody').innerHTML=grabsOf(T.o5); resEl.hidden=!open; $('.views [data-res]').setAttribute('aria-selected', String(open)); }
 function html(id){
   const n=T[id], isQ=n.k==='q', isEnd=n.k==='exit'||n.k==='end';
   const voices=(n.voice||[]).map(v=>`<figure class="voice"><blockquote><p>${esc(v.t)}</p></blockquote><figcaption>${esc(v.who)}</figcaption></figure>`).join('');
@@ -593,7 +595,8 @@ function start(){
 function setView(v){
   if(v===view||busy) return; view=v; stage.dataset.view=v;
   document.querySelectorAll('.views button').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.view===v)));
-  if(v==='map'){ TG.x=W/2; TG.y=H/2; TG.s=S_FIT(); settled=false; userHeld=false; paintLabels(); placeLabels(); }
+  if(v==='res'){ $('#resbody').innerHTML=grabsOf(T.o5); resEl.scrollTop=0; return; }
+  if(v==='map'){ TG.x=W/2; TG.y=MAP_Y(); TG.s=S_FIT(); settled=false; userHeld=false; paintLabels(); placeLabels(); }
   else { fit=null; aim(anchorOf(here), sideOf(here)); }
 }
 
@@ -610,7 +613,6 @@ document.addEventListener('click', e=>{
   if('back' in b.dataset) return back();
   if('reset' in b.dataset) return reset();
   if(b.dataset.view) return setView(b.dataset.view);
-  if('res' in b.dataset) return toggleRes();
 });
 document.addEventListener('keydown', e=>{
   if(e.metaKey||e.ctrlKey||e.altKey) return; const k=e.key.toLowerCase();
@@ -648,7 +650,7 @@ camEl.addEventListener('pointermove', e=>{
 });
 ['pointerup','pointercancel','pointerleave'].forEach(ev=> camEl.addEventListener(ev, e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null; if(pts.size===0){ drag=null; camEl.classList.remove('is-drag'); } }));
 camEl.style.touchAction='none';
-addEventListener('resize', ()=>{ if(stage.dataset.phase!=='grow') return; if(view==='map'){ TG.s=S_FIT(); TG.x=W/2; TG.y=H/2; settled=false; userHeld=false; } else { fit=null; aim(anchorOf(here), sideOf(here)); } });
+addEventListener('resize', ()=>{ if(stage.dataset.phase!=='grow') return; if(view==='map'){ TG.s=S_FIT(); TG.x=W/2; TG.y=MAP_Y(); settled=false; userHeld=false; } else if(view==='walk'){ fit=null; aim(anchorOf(here), sideOf(here)); } });
 
 /* the turning tree: 180 single frames on a canvas at 12 fps, so it can rest on the frame under the cursor and go on from it */
 const turnEl=$('#turn'), TCTX=turnEl.getContext('2d'), NF=180, FPS=12, FR=[]; let tPaused=false, tClock=0, tLast=0, tFrame=-1;
